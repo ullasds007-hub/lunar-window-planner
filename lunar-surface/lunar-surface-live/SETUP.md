@@ -1,34 +1,37 @@
 # Run the Lunar Surface Planner locally
 
-The astronomy data is not included in Git. Get the `data/` folder from
-the tested `lunar-surface-live` bundle and copy it next to this folder's
-`api.py`. Keep the folder structure intact.
-
 From the repository root, run:
 
     cd lunar-surface/lunar-surface-live
     python -m pip install -r requirements.txt
+    python prepare_data.py
     python -m uvicorn api:app --port 8002
 
-Keep the terminal open and visit http://127.0.0.1:8002/.
-If port 8002 is already in use, replace `8002` with `8003` in both
-the command and the browser address.
+The first setup needs internet access to download the astronomy files.
+You do not need to copy a data folder from another checkout. Keep the
+downloaded files local; do not commit them.
 
-## Quick check
+Keep the server terminal open and visit http://127.0.0.1:8002/.
+If port 8002 is busy, choose a free port and use it in the server
+command, browser address, and smoke-test URL.
 
-Set the time range to November 20, 2026 at 00:00 through November 24,
+## Verify the setup
+
+From the repository root in a second terminal, run:
+
+    cd lunar-surface/lunar-surface-live
+    python smoke_test.py http://127.0.0.1:8002
+
+For a browser check, use November 20, 2026 at 00:00 through November 24,
 2026 at 00:00 UTC. At latitude 0 and longitude 0, expect 96 hours of
 sunlight and Earth visibility together. Change only longitude to 180
 and expect no overlap.
 
-This is a smoke test, not a validation of exact event times. The
-planner assumes a smooth horizon and does not guarantee radio contact.
+These checks do not validate exact event times. The planner assumes a
+smooth horizon and does not model local terrain or guarantee radio contact.
 
-## First calculation
+## Offline demo
 
-The first calculation may need internet access even after you copy `data/`.
-In the clean-checkout test, the planner downloaded `moon_080317.tf`,
-`pck00008.tpc`, and `moon_pa_de421_1900-2050.bpc`.
-
-Run one calculation before the demo. If you plan to present offline,
-disconnect from the network and verify that a calculation still works.
+Run a calculation while connected to confirm the setup. Before relying
+on offline operation, disconnect and run a new calculation on the same
+machine with the downloaded files in place.
