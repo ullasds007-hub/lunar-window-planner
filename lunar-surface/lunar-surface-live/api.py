@@ -52,3 +52,7 @@ def windows(start:datetime,end:datetime,lat:float=Query(ge=-90,le=90),lon:float=
         return {'rows':rows}
     except Exception as exc:
         raise HTTPException(503,f'Lunar model could not run: {exc}') from exc
+
+@app.get('/compare')
+def compare_page():
+    return FileResponse(ROOT / 'compare.html')
