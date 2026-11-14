@@ -6,7 +6,9 @@
   function apply(value) {
     root.dataset.theme = valid(value) ? value : 'light';
     if (toggle) {
-      toggle.textContent = root.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode';
+      const dark = root.dataset.theme === 'dark';
+      toggle.textContent = dark ? 'Theme: Dark' : 'Theme: Light';
+      toggle.setAttribute('aria-label', dark ? 'Theme: Dark. Switch to light mode.' : 'Theme: Light. Switch to dark mode.');
     }
   }
   function restore() {
