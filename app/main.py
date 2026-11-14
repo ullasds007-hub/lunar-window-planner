@@ -12,11 +12,11 @@ def create_app():
 
     @app.get("/", include_in_schema=False)
     def home():
-        return FileResponse(ROOT / "app" / "templates" / "home.html")
+        return FileResponse(ROOT / "app" / "templates" / "home.html", headers={"Cache-Control": "no-cache"})
 
     @app.get("/earth", include_in_schema=False)
     def observe():
-        return FileResponse(ROOT / "app" / "templates" / "earth.html")
+        return FileResponse(ROOT / "app" / "templates" / "earth.html", headers={"Cache-Control": "no-cache"})
 
     app.mount("/lunar-surface", create_lunar_app())
     app.mount("/", earth)
