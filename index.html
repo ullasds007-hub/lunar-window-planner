@@ -1,57 +1,208 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lunar Window Planner</title><style>
-*{box-sizing:border-box}body{margin:0;background:#101629;color:#eef0ff;font:16px system-ui}main{max-width:780px;margin:50px auto;padding:24px}h1{font-size:clamp(32px,7vw,56px);margin:8px 0}small{color:#c9bbff}form,section{background:#202941;border:1px solid #414a68;border-radius:16px;padding:24px;margin-top:24px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}input,select,button{font:inherit;border-radius:8px;padding:10px;width:100%;margin-top:6px}button{background:#c9bbff;color:#171332;font-weight:bold;border:0;margin-top:20px;cursor:pointer}li{margin:10px 0}p{line-height:1.5}
-.chart-row{margin:12px 0}.chart-row meter{width:100%;height:20px;display:block}</style><main><noscript><p role="alert">This preview cannot run the planner. Save the HTML file and open it in Chrome, Edge, or Firefox with JavaScript enabled.</p></noscript><small>OBSERVATION PLANNER · LIVE LOCAL API</small><h1>Lunar Window Planner</h1><p>Astronomy only — weather not included. Each observing night runs from local noon to noon the next day. </p>
-<form id="planner"><div class="grid"><label>Location<select name="locationId"><option value="mysuru">Mysuru</option></select></label><label>First observing night<input required type="date" name="startDate" value="2026-11-20"></label><label>Last observing night<input required type="date" name="endDate" value="2026-11-22" aria-describedby="error"></label><label>Observation goal<select name="goal"><option value="moon_viewing">Moon viewing</option><option value="dark_sky">Dark sky</option></select></label></div><p><strong>Moon viewing:</strong> The Moon is at least 10° above the horizon and the Sun is at least 6° below it.<br><strong>Dark sky:</strong> The Moon is below the horizon and the Sun is at least 18° below it.</p><p id="error" role="alert" hidden></p><button>Find Windows</button></form><section aria-live="polite" id="output">Choose your dates and select Find Windows.</section></main>
-<script>
-const form=document.querySelector('#planner'), out=document.querySelector('#output'), error=document.querySelector('#error'), button=form.querySelector('button');
-const fixture=[
- ['moon_viewing','2026-11-20','2026-11-21T00:30','2026-11-21T02:00'],
- ['moon_viewing','2026-11-21','2026-11-21T19:15','2026-11-21T21:00'],
- ['dark_sky','2026-11-22','2026-11-23T02:00','2026-11-23T04:00']
-].map(([goal,date,start,end])=>({goal,id:`${date}-1`,date,start:start+':00+05:30',end:end+':00+05:30',score:null}));
-const minutes=w=>(Date.parse(w.end)-Date.parse(w.start))/60000;
-// Live planner API.
-async function findWindows(input){
- const response=await fetch('/windows?'+new URLSearchParams(input));
- if(!response.ok) throw Error('The server could not complete the search.');
- return response.json();
-}
-const fmt=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true});
-const range=w=>`${fmt.format(new Date(w.start))}–${fmt.format(new Date(w.end))} IST`;
-function add(tag,value,parent=out){const el=document.createElement(tag);el.textContent=value;parent.append(el);return el;}
-// Replace this renderer with the team's Charts module at integration.
-function renderChart(parent,windows,bestWindowId){
-  add('h3','Window duration · minutes',parent);
-  for(const w of windows){
-    const row=add('div','',parent);row.className='chart-row';
-    const label=`${w.date} · ${Math.round(minutes(w))} min${w.id===bestWindowId?' · Best window':''}`;
-    add(w.id===bestWindowId?'strong':'span',label,row);
-    const bar=add('meter','',row);bar.min=0;bar.max=Math.max(...windows.map(minutes));bar.value=minutes(w);
-    bar.setAttribute('aria-label',label);
-  }
-}
-form.addEventListener('submit',async e=>{
-e.preventDefault();
-const input=Object.fromEntries(new FormData(form));
-error.hidden=true;form.elements.endDate.removeAttribute('aria-invalid');
-const reversed=input.endDate<input.startDate;
-if(reversed||Date.parse(input.endDate)-Date.parse(input.startDate)>=31*86400000){error.textContent=reversed?'Last observing night cannot be before the first.':'Choose up to 31 observing nights.';error.hidden=false;form.elements.endDate.setAttribute('aria-invalid','true');form.elements.endDate.focus();out.textContent='Correct the dates to run a search.';return;}
-button.disabled=true;out.textContent='Finding observation windows…';
-try{
-const response=await findWindows(input);
-if(response.status!=='ok')throw Error(response.error?.message || 'Search failed.');
-const {windows,bestWindowId}=response.result;
-out.textContent="";
-if(!windows.length){add('h2','No windows found');add('p','Try another observing night or goal.');return;}
-const best=windows.find(w=>w.id===bestWindowId);
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lunar Window Planner</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #101629; color: #eef0ff; font: 16px system-ui; }
+    main { max-width: 780px; margin: 50px auto; padding: 24px; }
+    h1 { font-size: clamp(32px, 7vw, 56px); margin: 8px 0; }
+    small { color: #c9bbff; }
+    form, section {
+      background: #202941;
+      border: 1px solid #414a68;
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    input, select, button {
+      font: inherit;
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      margin-top: 6px;
+    }
+    button {
+      background: #c9bbff;
+      color: #171332;
+      font-weight: bold;
+      border: 0;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    li { margin: 10px 0; }
+    p { line-height: 1.5; }
+    .chart-row { margin: 12px 0; }
+    .chart-row meter { width: 100%; height: 20px; display: block; }
+  </style>
+</head>
+<body>
+  <main>
+    <noscript>
+      <p role="alert">Enable JavaScript in your browser to use the planner.</p>
+    </noscript>
 
-add('h2',`Longest qualifying window: Night of ${best.date}`);
-add('p',`${range(best)} · ${Math.round(minutes(best))} min`);
-add('h3','All qualifying windows');
-const list=add('ul','');
-for(const w of windows)add('li',`${w.date} · ${range(w)} · ${Math.round(minutes(w))} min${w.id===bestWindowId?' (best)':''}`,list);
-renderChart(out,windows,bestWindowId);
-}catch(e){out.textContent=e.message+' Select Find Windows to retry.';}
-finally{button.disabled=false;}
-});
-</script></html>
+    <small>OBSERVATION PLANNER · LIVE LOCAL API</small>
+    <h1>Lunar Window Planner</h1>
+    <p>Astronomy only — weather not included. Each observing night runs from local noon to noon the next day.</p>
+
+    <form id="planner">
+      <div class="grid">
+        <label>
+          Location
+          <select name="locationId">
+            <option value="mysuru">Mysuru</option>
+          </select>
+        </label>
+        <label>
+          First observing night
+          <input required type="date" name="startDate" value="2026-11-20">
+        </label>
+        <label>
+          Last observing night
+          <input required type="date" name="endDate" value="2026-11-22" aria-describedby="error">
+        </label>
+        <label>
+          Observation goal
+          <select name="goal" aria-describedby="goal-help">
+            <option value="moon_viewing">Moon viewing</option>
+            <option value="dark_sky">Dark sky</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="goal-help">
+        <strong>Moon viewing:</strong> The Moon is at least 10° above the horizon and the Sun is at least 6° below it.
+        <br>
+        <strong>Dark sky:</strong> The Moon is below the horizon and the Sun is at least 18° below it.
+      </p>
+
+      <p id="error" role="alert" hidden></p>
+      <button type="submit">Find Windows</button>
+    </form>
+
+    <section id="output" aria-live="polite">
+      Choose your dates and select Find Windows.
+    </section>
+  </main>
+
+  <script>
+    const form = document.querySelector('#planner');
+    const out = document.querySelector('#output');
+    const error = document.querySelector('#error');
+    const button = form.querySelector('button');
+
+    const minutes = w => (Date.parse(w.end) - Date.parse(w.start)) / 60000;
+    const fmt = new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    const range = w => `${fmt.format(new Date(w.start))}–${fmt.format(new Date(w.end))} IST`;
+
+    async function findWindows(input) {
+      const response = await fetch('/windows?' + new URLSearchParams(input));
+      if (!response.ok) throw new Error('The server could not complete the search.');
+      return response.json();
+    }
+
+    function add(tag, value, parent = out) {
+      const el = document.createElement(tag);
+      el.textContent = value;
+      parent.append(el);
+      return el;
+    }
+
+    function renderChart(parent, windows, bestWindowId) {
+      add('h3', 'Window duration · minutes', parent);
+      const maxDuration = Math.max(...windows.map(minutes));
+
+      for (const w of windows) {
+        const row = add('div', '', parent);
+        row.className = 'chart-row';
+        const isBest = w.id === bestWindowId;
+        const label = `${w.date} · ${Math.round(minutes(w))} min${isBest ? ' · Best window' : ''}`;
+
+        add(isBest ? 'strong' : 'span', label, row);
+        const bar = add('meter', '', row);
+        bar.min = 0;
+        bar.max = maxDuration;
+        bar.value = minutes(w);
+        bar.setAttribute('aria-label', label);
+      }
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const input = Object.fromEntries(new FormData(form));
+      const endDateField = form.elements.endDate;
+
+      error.hidden = true;
+      endDateField.removeAttribute('aria-invalid');
+
+      const reversed = input.endDate < input.startDate;
+      const tooLong = Date.parse(input.endDate) - Date.parse(input.startDate) >= 31 * 86400000;
+
+      if (reversed || tooLong) {
+        error.textContent = reversed
+          ? 'Last observing night cannot be before the first.'
+          : 'Choose up to 31 observing nights.';
+        error.hidden = false;
+        endDateField.setAttribute('aria-invalid', 'true');
+        endDateField.focus();
+        out.textContent = 'Correct the dates to run a search.';
+        return;
+      }
+
+      button.disabled = true;
+      out.textContent = 'Finding observation windows…';
+
+      try {
+        const response = await findWindows(input);
+        if (response.status !== 'ok') {
+          throw new Error(response.error?.message || 'Search failed.');
+        }
+
+        const { windows, bestWindowId } = response.result;
+        out.textContent = '';
+
+        const goalLabel = input.goal === 'dark_sky' ? 'Dark sky' : 'Moon viewing';
+        add('p', `Mysuru · ${goalLabel} · ${input.startDate} to ${input.endDate}`);
+
+        if (!windows.length) {
+          add('h2', 'No windows found');
+          add('p', 'Try another observing night or goal.');
+          return;
+        }
+
+        const best = windows.find(w => w.id === bestWindowId);
+        add('h2', `Longest qualifying window: Night of ${best.date}`);
+        add('p', `${range(best)} · ${Math.round(minutes(best))} min`);
+
+        add('h3', 'All qualifying windows');
+        const list = add('ul', '');
+        for (const w of windows) {
+          const marker = w.id === bestWindowId ? ' (best)' : '';
+          add('li', `${w.date} · ${range(w)} · ${Math.round(minutes(w))} min${marker}`, list);
+        }
+
+        renderChart(out, windows, bestWindowId);
+      } catch (err) {
+        out.textContent = `${err.message} Select Find Windows to retry.`;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
