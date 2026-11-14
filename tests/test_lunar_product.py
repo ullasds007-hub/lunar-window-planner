@@ -58,14 +58,25 @@ def test_combined_comparison_route_and_assets():
     from app.main import create_app
 
     client = TestClient(create_app())
-    for path in ("/", "/earth", "/lunar-surface/"):
-        assert client.get(path).status_code == 200
-    response = client.get("/lunar-surface/compare?example=athena")
-    assert response.status_code == 200
-    for filename in ("compare.css", "compare.js"):
-        assert f"./assets/{filename}" in response.text
-        asset = client.get(f"/lunar-surface/assets/{filename}")
+    assets = "/lunar-surface/assets/"
+    for path, script in (
+        ("/", None),
+        ("/earth", "earth.js"),
+        ("/lunar-surface/", "site.js"),
+        ("/lunar-surface/compare?example=athena", "compare.js"),
+    ):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert f'href="{assets}atlas.css?' in response.text
+        assert 'id="theme-toggle"' not in response.text
+        assert f'{assets}theme.js' not in response.text
+        if script:
+            assert f'src="{assets}{script}' in response.text
+
+    for filename in ("atlas.css", "compare.js", "site.js", "earth.js"):
+        asset = client.get(assets + filename)
         assert asset.status_code == 200 and asset.content
+
     earth = client.get("/windows", params={
         "locationId": "not-a-site", "startDate": "2026-11-14",
         "endDate": "2026-11-14", "goal": "moon_viewing",
