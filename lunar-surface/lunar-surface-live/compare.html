@@ -272,7 +272,7 @@ function resultActions(inputs,a,b,delta){
   const feedback=document.createElement('span');
   feedback.setAttribute('role','status');
   copy.onclick=async()=>{
-    try {await navigator.clipboard.writeText(link.href);feedback.textContent='Link copied.';}
+    try {await navigator.clipboard.writeText(link.href);feedback.textContent=location.hostname==='127.0.0.1'||location.hostname==='localhost'?'Link copied. This local link only works on this device.':'Link copied.';}
     catch {const field=document.createElement('input');field.readOnly=true;field.value=link.href;field.setAttribute('aria-label','Comparison link');feedback.replaceChildren(field);field.select();}
   };
   const download=document.createElement('button');
@@ -286,7 +286,8 @@ function resultActions(inputs,a,b,delta){
     const url=URL.createObjectURL(new Blob([rows.map(row=>row.join(',')).join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'}));
     const anchor=document.createElement('a');anchor.href=url;anchor.download='lunar-comparison.csv';anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   };
-  actions.append(copy,download,feedback);
+  const reopen=document.createElement('a');reopen.href=link.href;reopen.target='_blank';reopen.rel='noopener';reopen.textContent='Open comparison in new tab';
+  actions.append(copy,download,reopen,feedback);
   results.prepend(actions);
 }
 form.addEventListener('submit',async event=>{
