@@ -16,7 +16,7 @@ def create_app():
 
     @app.get("/earth", include_in_schema=False)
     def observe():
-        return FileResponse(ROOT / "index.html")
+        return FileResponse(ROOT / "app" / "templates" / "earth.html")
 
     app.mount("/lunar-surface", create_lunar_app())
     app.mount("/", earth)
