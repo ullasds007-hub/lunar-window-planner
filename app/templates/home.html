@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lunar Window Planner · Landing Site Navigator</title>
+<link rel="stylesheet" href="/lunar-surface/assets/home.css">
+<link rel="stylesheet" href="/lunar-surface/assets/planner.css">
+</head>
+<body>
+<div class="wrap"><header class="planner-header"><nav class="planner-nav" aria-label="Planner tools"><a class="planner-brand" href="/" aria-current="page">Lunar Window Planner</a><a href="/lunar-surface/compare">Compare landing sites</a><a href="/lunar-surface/">Analyze one site</a><a href="/earth">Observe from Earth</a></nav></header></div>
+<main class="wrap">
+<section class="hero">
+<div>
+<div class="kicker">Lunar Landing Site Navigator</div>
+<h1>Find when a lunar site has sunlight and Earth in view</h1>
+<p>Compare two lunar sites or landing dates. See when the Sun and Earth rise above the modeled horizon, and how long both are in view.</p>
+<div class="actions">
+<a class="button primary" href="/lunar-surface/compare">Compare landing sites</a>
+<a class="button" href="/lunar-surface/compare?example=athena">Try the Athena example</a>
+</div>
+</div>
+<aside class="card" aria-labelledby="athena">
+<div class="kicker">Worked example</div>
+<h2 id="athena">Athena · same site, later arrival</h2>
+<div class="metric">+3.9 h</div>
+<p>Time with both the Sun and Earth above the horizon increases from <strong>92.1 h</strong> to <strong>96.0 h</strong> when the four-day window moves from Nov 14–18 to Nov 17–21, 2026 UTC.</p>
+</aside>
+</section>
+<section class="home-tools" aria-label="Other planning tools">
+<article class="card"><h2>Analyze one site</h2><p>Enter lunar coordinates and a UTC range to see the visibility timeline and export individual intervals.</p><a href="/lunar-surface/">Open the single-site planner</a></article>
+<article class="card"><h2>Observe from Earth</h2><p>Find Moon-viewing or dark-sky windows from Mysuru. This tool uses local time and does not include weather.</p><a href="/earth">Open the Earth observation planner</a></article>
+</section>
+<p class="note"><strong>Smooth-horizon estimate.</strong> The model does not account for terrain shadows, estimate power output, or guarantee radio contact.</p>
+</main>
+</body>
+</html>
