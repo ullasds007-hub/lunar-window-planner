@@ -38,23 +38,23 @@ machine with the downloaded files in place.
 
 ## Run both planners on one port
 
-Set up the Earth planner's dependencies and data as usual. Then, from
-the repository root, install the lunar dependencies, prepare the lunar
-data, and start the combined server:
+From the repository root, run:
 
-    python -m pip install -r lunar-surface/lunar-surface-live/requirements.txt
-    python lunar-surface/lunar-surface-live/prepare_data.py
+    python -m pip install -r requirements.txt -r lunar-surface/lunar-surface-live/requirements.txt tzdata
+    python prepare_combined.py
     python -m uvicorn combined_app:app --port 8005
+
+The first setup needs internet access. The script prepares the astronomy
+files for both planners without downloading DE440s twice. Keep the
+downloaded files local; do not commit them.
 
 Open http://127.0.0.1:8005/ for the Earth planner. Use the homepage link
 to open the Lunar Surface Planner at http://127.0.0.1:8005/lunar-surface/.
 Keep the trailing slash when opening the lunar page directly.
 
-With the server running, verify the mounted lunar API from a second
-terminal at the repository root:
+From a second terminal at the repository root, verify the mounted lunar API:
 
     python lunar-surface/lunar-surface-live/smoke_test.py http://127.0.0.1:8005/lunar-surface
 
-To run the Earth planner by itself, use the original `api:app` entry
-point. Use `combined_app:app` when you want the homepage's lunar link
-to work on the same server.
+For a browser check of the Earth planner, choose Mysuru and Moon viewing,
+set November 20–22, 2026, and click Find Windows. Expect three windows.
