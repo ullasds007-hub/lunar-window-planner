@@ -21,7 +21,7 @@ def model():
 def home():
     return FileResponse(ROOT/'index.html')
 @app.get('/surface-windows')
-def windows(start:datetime,end:datetime,lat:float=Query(ge=-90,le=90),lon:float=Query(ge=-180,le=180)):
+def windows(start:datetime,end:datetime,lat:float=Query(ge=-90,le=90),lon:float=Query(ge=-180,le=180),profile:bool=False):
     if start.tzinfo is None or end.tzinfo is None:
         raise HTTPException(400,'Include UTC offsets.')
     a,b=[x.astimezone(timezone.utc) for x in (start,end)]
@@ -49,6 +49,19 @@ def windows(start:datetime,end:datetime,lat:float=Query(ge=-90,le=90),lon:float=
                         else: row.append([s,z])
                 left=right
             flag=int(next_flag)
-        return {'rows':rows}
+        result = {'rows': rows}
+        if profile:
+            count = 241
+            dates = [a + (b-a)*i/(count-1) for i in range(count)]
+            here = site.at(ts.from_datetimes(dates))
+            sun = here.observe(eph['sun']).apparent().altaz()[0].degrees
+            earth = here.observe(eph['earth']).apparent().altaz()[0].degrees
+            result['profile'] = [[d.isoformat(), float(s), float(e)]
+                                 for d,s,e in zip(dates,sun,earth)]
+        return result
     except Exception as exc:
         raise HTTPException(503,f'Lunar model could not run: {exc}') from exc
+
+@app.get('/compare')
+def compare_page():
+    return FileResponse(ROOT / 'compare.html')

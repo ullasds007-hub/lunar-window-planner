@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lunar scenario comparison</title>
+<style>
+body{margin:2rem auto;padding:0 1rem;max-width:65rem;background:#111827;color:#f3f4ff;font:1rem system-ui}a{color:#a5d8ff}fieldset{min-width:0;border:1px solid #728199;border-radius:.6rem;padding:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:1rem}label{display:block;margin:.65rem 0}input{display:block;max-width:100%;font:inherit}button{padding:.65rem 1rem;margin:1rem 0;font:inherit}table{width:100%;border-collapse:collapse}th,td{padding:.55rem;text-align:left;border-bottom:1px solid #728199}.track{height:.55rem;background:#303d52;position:relative;border-radius:.3rem;overflow:hidden}.track span{position:absolute;height:100%;background:#8fe1d6}
+</style>
+<main><a href="./">Single-site planner</a><h1>Compare lunar landing scenarios</h1>
+<p>Compare two sites or try the same site on different dates. All dates start at 00:00 UTC. These estimates use a smooth horizon: they do not account for terrain shadows, power output, or radio-link reliability.</p>
+<form id="form"><div class="grid" id="inputs"></div><button>Compare scenarios</button> <button type="button" id="copy">Copy A to B</button>
+<label>Shift B by days (negative moves earlier)<input id="shift-days" type="number" step="1" value="3"></label>
+<button type="button" id="shift">Shift B dates</button></form>
+<p id="status" role="status"></p><div id="results" class="grid"></div>
+<p>Historical landing coordinates: <a href="https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html">NASA spacecraft landing table</a>. The model uses coordinates only, not landing-site terrain.</p><p>Model: JPL DE440s and lunar orientation kernels via Skyfield. This comparison interface was developed with ChatGPT assistance.</p></main>
+<script>
+const byId = id => document.getElementById(id);
+const form = byId('form'), status = byId('status'), results = byId('results');
+const labels = ['Sunlight','Darkness','Earth visible','Sunlight + Earth visible'];
+for (const [id,lon] of [['A',0],['B',180]]) {
+  const field = document.createElement('fieldset');
+  field.innerHTML = '<legend>Scenario '+id+'</legend>'+
+    '<label>Latitude (°)<input required name="lat" type="number" min="-90" max="90" step="any" value="-85"></label>'+
+    '<label>Longitude (° east)<input required name="lon" type="number" min="-180" max="180" step="any" value="'+lon+'"></label>'+
+    '<label>Start date (UTC)<input required name="start" type="date" value="2026-11-20"></label>'+
+    '<label>End date (UTC)<input required name="end" type="date" value="2026-11-24"></label>';
+  byId('inputs').append(field);
+}
+const sites = {
+  im1: [-80.13, 1.44],
+  im2: [-84.7906, 29.1957]
+};
+for (const field of form.querySelectorAll('fieldset')) {
+  const label = document.createElement('label');
+  label.innerHTML = 'Site preset <select><option value="">Custom coordinates</option><option value="im1">Odysseus (IM-1) — historical landing site</option><option value="im2">Athena (IM-2) — historical landing site</option></select>';
+  const select = label.querySelector('select');
+  const lat = field.querySelector('[name=lat]');
+  const lon = field.querySelector('[name=lon]');
+  field.querySelector('legend').after(label);
+  select.onchange = () => {
+    if (select.value) [lat.value, lon.value] = sites[select.value];
+    edited('Site selection updated.');
+  };
+  for (const input of [lat, lon]) input.addEventListener('input', () => { select.value = ''; });
+}
+const [fieldA,fieldB]=form.querySelectorAll('fieldset');
+function edited(message) {
+  results.replaceChildren();
+  status.textContent=message+' Click Compare scenarios to recalculate.';
+}
+byId('copy').onclick=()=>{
+  for(const input of fieldA.querySelectorAll('input')) fieldB.querySelector('[name='+input.name+']').value=input.value;
+  fieldB.querySelector('select').value=fieldA.querySelector('select').value;
+  edited('Copied A into B.');
+};
+byId('shift').onclick=()=>{
+  const days=byId('shift-days').valueAsNumber;
+  const dates=[...fieldB.querySelectorAll('input[type=date]')];
+  const shifted=dates.map(input=>input.valueAsNumber+days*86400000);
+  if(!Number.isInteger(days)||shifted.some(t=>!Number.isFinite(t)||t<Date.UTC(1901,0,1)||t>=Date.UTC(2050,0,1))){
+    status.textContent='Enter a whole number of days that keeps both B dates within 1901–2049.';
+    return;
+  }
+  dates.forEach((input,i)=>input.valueAsNumber=shifted[i]);
+  edited('Shifted both B dates by '+days+' days.');
+};
+async function scenario(field) {
+  const query = new URLSearchParams({profile:'true'});
+  for(const input of field.querySelectorAll('input')) {
+    query.set(input.name, input.type === 'date' ? input.value+'T00:00:00Z' : input.value);
+  }
+  const start = Date.parse(query.get('start')), end = Date.parse(query.get('end'));
+  if(end <= start || end-start > 60*86400000) throw Error('Each end date must be after its start date, within 60 days.');
+  const response = await fetch('./surface-windows?'+query);
+  const body = await response.json();
+  if(!response.ok) throw Error(typeof body.detail === 'string' ? body.detail : 'Check coordinates and dates.');
+  return {start,end,profile:body.profile,rows:body.rows.map(row=>row.map(pair=>pair.map(Date.parse)))};
+}
+const hours = ms => (ms/3600000).toFixed(1)+' h';
+const utc = ms => new Date(ms).toISOString().slice(0,16).replace('T',' ')+' UTC';
+function chart(data,card) {
+  const p=data.profile, w=480, h=210, x=i=>42+i*420/(p.length-1);
+  const y=v=>12+(scale-v)*180/(2*scale);
+  const box=document.createElement('div');
+  box.innerHTML='<h3>Elevation above the smooth horizon</h3><svg viewBox="0 0 480 210" style="width:100%" role="img" aria-label="Sun and Earth elevations in degrees"></svg><p>Sun (gold) · Earth (cyan) · Dashed line: 0° horizon</p><output></output>';
+  const svg=box.querySelector('svg');
+  svg.innerHTML=[scale,0,-scale].map(v=>'<line x1="42" x2="462" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#8190a5" stroke-dasharray="4 4"/><text x="0" y="'+(y(v)+4)+'" fill="white" font-size="12">'+v+'°</text>').join('');
+  [1,2].forEach((j)=>svg.insertAdjacentHTML('beforeend','<polyline fill="none" stroke="'+(j===1?'#ffce76':'#8fe1d6')+'" stroke-width="2" points="'+p.map((r,i)=>x(i)+','+y(r[j])).join(' ')+'"/>'));
+  svg.insertAdjacentHTML('beforeend','<line class="cursor" y1="12" y2="192" stroke="white"/>');
+  cursors.push(i=>{
+    const line=svg.querySelector('.cursor');
+    line.setAttribute('x1',x(i));line.setAttribute('x2',x(i));
+    box.querySelector('output').textContent=utc(Date.parse(p[i][0]))+' · Sun '+p[i][1].toFixed(2)+'° · Earth '+p[i][2].toFixed(2)+'°';
+  });
+  card.append(box);
+}
+let scale=90, cursors=[];
+function render(data,id) {
+  const card=document.createElement('section');
+  card.innerHTML='<h2>Scenario '+id+'</h2><p>'+utc(data.start)+' → '+utc(data.end)+'</p><table><thead><tr><th scope="col">Condition</th><th scope="col">Total</th></tr></thead><tbody></tbody></table>';
+  data.rows.forEach((row,i)=>{
+    const tr=card.querySelector('tbody').insertRow();
+    const title=document.createElement('th');title.scope='row';title.textContent=labels[i];tr.append(title);
+    const cell=tr.insertCell();cell.textContent=hours(row.reduce((sum,[a,b])=>sum+b-a,0));
+    const bar=document.createElement('div');bar.className='track';bar.setAttribute('aria-hidden','true');
+    row.forEach(([a,b])=>{
+      const span=document.createElement('span');
+      span.style.left=100*(a-data.start)/(data.end-data.start)+'%';
+      span.style.width=100*(b-a)/(data.end-data.start)+'%';bar.append(span);
+    });cell.append(bar);
+  });
+  const best=data.rows[3].reduce((best,w)=>!best||w[1]-w[0]>best[1]-best[0]?w:best,null);
+  const p=document.createElement('p');p.textContent=best?'Longest overlap: '+hours(best[1]-best[0])+' · '+utc(best[0])+' → '+utc(best[1]):'No overlap in this range.';
+  card.append(p);chart(data,card);results.append(card);
+}
+form.addEventListener('submit',async event=>{
+  event.preventDefault();results.replaceChildren();status.textContent='Calculating both scenarios…';
+  const controls=[...form.querySelectorAll('button,input,select')]; controls.forEach(el=>el.disabled=true);
+  try {
+    const [a,b]=await Promise.all([...form.querySelectorAll('fieldset')].map(scenario));
+    scale=Math.max(5,Math.ceil(Math.max(...[...a.profile,...b.profile].flatMap(r=>[Math.abs(r[1]),Math.abs(r[2])]))/5)*5);
+    cursors=[];
+    render(a,'A');render(b,'B');
+    const label=document.createElement('label');
+    label.textContent='Scrub both charts by progress through each date range';
+    const slider=document.createElement('input');
+    slider.type='range';slider.min=0;slider.max=a.profile.length-1;slider.value=0;
+    slider.oninput=()=>cursors.forEach(fn=>fn(Number(slider.value)));
+    label.append(slider);label.style.gridColumn='1 / -1';results.prepend(label);slider.oninput();
+    const total = d=>d.rows[3].reduce((sum,[s,e])=>sum+e-s,0);
+    const delta=total(b)-total(a);
+    status.textContent='Total overlap (B − A): '+(delta>=0?'+':'−')+hours(Math.abs(delta))+'. Bars show each scenario relative to its own selected date range.';
+  } catch(error){status.textContent=error.message;} finally{controls.forEach(el=>el.disabled=false);}
+});
+</script></html>
