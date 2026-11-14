@@ -1,0 +1,7 @@
+skyfield>=1.49
+numpy
+tzdata
+fastapi
+uvicorn
+pytest
+httpx
