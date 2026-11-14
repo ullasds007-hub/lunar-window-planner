@@ -19,7 +19,7 @@ def create_lunar_app() -> FastAPI:
 
     @surface.get("/", include_in_schema=False)
     def home():
-        return FileResponse(lunar.DATA_DIR / "index.html")
+        return FileResponse(PACKAGE / "templates" / "site.html")
 
     @surface.get("/compare", include_in_schema=False)
     def compare_page():
