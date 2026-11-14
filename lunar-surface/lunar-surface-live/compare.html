@@ -254,8 +254,43 @@ function render(data,id) {
   card.append(details);
   results.append(card);
 }
+const fieldsForShare=[...form.querySelectorAll('fieldset')];
+const shareNames=['lat','lon','start','end'];
+function snapshot(){
+  return fieldsForShare.map(field=>shareNames.map(name=>field.querySelector('[name='+name+']').value));
+}
+function resultActions(inputs,a,b,delta){
+  const actions=document.createElement('div');
+  actions.className='compare-actions';
+  actions.style.gridColumn='1 / -1';
+  const link=new URL(location.href);
+  link.search='';
+  link.hash='';
+  inputs.forEach((values,i)=>values.forEach((value,j)=>link.searchParams.set((i?'b_':'a_')+shareNames[j],value)));
+  const copy=document.createElement('button');
+  copy.textContent='Copy comparison link';
+  const feedback=document.createElement('span');
+  feedback.setAttribute('role','status');
+  copy.onclick=async()=>{
+    try {await navigator.clipboard.writeText(link.href);feedback.textContent='Link copied.';}
+    catch {const field=document.createElement('input');field.readOnly=true;field.value=link.href;field.setAttribute('aria-label','Comparison link');feedback.replaceChildren(field);field.select();}
+  };
+  const download=document.createElement('button');
+  download.textContent='Export comparison CSV';
+  download.onclick=()=>{
+    const rows=[['scenario','latitude_deg','longitude_deg_east','start_utc','end_utc','condition','hours']];
+    [a,b].forEach((data,i)=>data.rows.forEach((row,j)=>{
+      rows.push([i?'B':'A',...inputs[i].slice(0,2),new Date(data.start).toISOString(),new Date(data.end).toISOString(),labels[j],(row.reduce((sum,[s,e])=>sum+e-s,0)/3600000).toFixed(3)]);
+    }));
+    rows.push(['B - A','','','','','Modeled overlap difference',(delta/3600000).toFixed(3)]);
+    const url=URL.createObjectURL(new Blob([rows.map(row=>row.join(',')).join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'}));
+    const anchor=document.createElement('a');anchor.href=url;anchor.download='lunar-comparison.csv';anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  actions.append(copy,download,feedback);
+  results.prepend(actions);
+}
 form.addEventListener('submit',async event=>{
-  event.preventDefault();results.replaceChildren();status.textContent='Calculating both scenarios…';
+  event.preventDefault();const inputs=snapshot();results.replaceChildren();status.textContent='Calculating both scenarios…';
   const controls=[...form.querySelectorAll('button,input,select')]; controls.forEach(el=>el.disabled=true);
   try {
     const [a,b]=await Promise.all([...form.querySelectorAll('fieldset')].map(scenario));
@@ -270,6 +305,7 @@ form.addEventListener('submit',async event=>{
     label.append(slider);label.style.gridColumn='1 / -1';results.prepend(label);slider.oninput();
     const total = d=>d.rows[3].reduce((sum,[s,e])=>sum+e-s,0);
     const delta=total(b)-total(a);
+    resultActions(inputs,a,b,delta);
     byId('scenario-editor').open=false;
     const metric=document.createElement('strong');
     metric.textContent=(delta>0?'+':delta<0?'−':'')+hours(Math.abs(delta));
@@ -303,4 +339,13 @@ try {
   form.addEventListener('change',save);
   form.addEventListener('submit',save);
 } catch {}
+
+const shared=new URLSearchParams(location.search);
+if(!shared.has('example') && ['a_','b_'].every(prefix=>shareNames.every(name=>shared.has(prefix+name)))){
+  fieldsForShare.forEach((field,i)=>{
+    field.querySelector('select').value='';
+    shareNames.forEach(name=>field.querySelector('[name='+name+']').value=shared.get((i?'b_':'a_')+name));
+  });
+  form.requestSubmit();
+}
 </script></html>
