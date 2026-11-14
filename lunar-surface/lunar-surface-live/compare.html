@@ -291,4 +291,16 @@ if (new URLSearchParams(location.search).get('example') === 'athena') {
   });
   form.requestSubmit();
 }
+
+// Preserve scenario inputs locally; computed results are always recalculated.
+try {
+  const key='lunar-comparison-v1';
+  const inputs=[...form.querySelectorAll('fieldset input,fieldset select')];
+  const saved=JSON.parse(localStorage.getItem(key)||'null');
+  if(!new URLSearchParams(location.search).has('example') && Array.isArray(saved) && saved.length===inputs.length)
+    inputs.forEach((el,i)=>{if(typeof saved[i]==='string')el.value=saved[i];});
+  const save=()=>{try{localStorage.setItem(key,JSON.stringify(inputs.map(el=>el.value)));}catch{}};
+  form.addEventListener('change',save);
+  form.addEventListener('submit',save);
+} catch {}
 </script></html>
