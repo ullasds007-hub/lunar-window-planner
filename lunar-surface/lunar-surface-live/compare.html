@@ -9,7 +9,7 @@ body{margin:2rem auto;padding:0 1rem;max-width:65rem;background:#111827;color:#f
 <label>Shift B by days (negative moves earlier)<input id="shift-days" type="number" step="1" value="3"></label>
 <button type="button" id="shift">Shift B dates</button></form>
 <p id="status" role="status"></p><div id="results" class="grid"></div>
-<p>Model: JPL DE440s and lunar orientation kernels via Skyfield. This comparison interface was developed with ChatGPT assistance.</p></main>
+<p>Historical landing coordinates: <a href="https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html">NASA spacecraft landing table</a>. The model uses coordinates only, not landing-site terrain.</p><p>Model: JPL DE440s and lunar orientation kernels via Skyfield. This comparison interface was developed with ChatGPT assistance.</p></main>
 <script>
 const byId = id => document.getElementById(id);
 const form = byId('form'), status = byId('status'), results = byId('results');
@@ -23,6 +23,23 @@ for (const [id,lon] of [['A',0],['B',180]]) {
     '<label>End date (UTC)<input required name="end" type="date" value="2026-11-24"></label>';
   byId('inputs').append(field);
 }
+const sites = {
+  im1: [-80.13, 1.44],
+  im2: [-84.7906, 29.1957]
+};
+for (const field of form.querySelectorAll('fieldset')) {
+  const label = document.createElement('label');
+  label.innerHTML = 'Site preset <select><option value="">Custom coordinates</option><option value="im1">Odysseus (IM-1) — historical landing site</option><option value="im2">Athena (IM-2) — historical landing site</option></select>';
+  const select = label.querySelector('select');
+  const lat = field.querySelector('[name=lat]');
+  const lon = field.querySelector('[name=lon]');
+  field.querySelector('legend').after(label);
+  select.onchange = () => {
+    if (select.value) [lat.value, lon.value] = sites[select.value];
+    edited('Site selection updated.');
+  };
+  for (const input of [lat, lon]) input.addEventListener('input', () => { select.value = ''; });
+}
 const [fieldA,fieldB]=form.querySelectorAll('fieldset');
 function edited(message) {
   results.replaceChildren();
@@ -30,6 +47,7 @@ function edited(message) {
 }
 byId('copy').onclick=()=>{
   for(const input of fieldA.querySelectorAll('input')) fieldB.querySelector('[name='+input.name+']').value=input.value;
+  fieldB.querySelector('select').value=fieldA.querySelector('select').value;
   edited('Copied A into B.');
 };
 byId('shift').onclick=()=>{
@@ -94,7 +112,7 @@ function render(data,id) {
 }
 form.addEventListener('submit',async event=>{
   event.preventDefault();results.replaceChildren();status.textContent='Calculating both scenarios…';
-  const controls=[...form.querySelectorAll('button,input')]; controls.forEach(el=>el.disabled=true);
+  const controls=[...form.querySelectorAll('button,input,select')]; controls.forEach(el=>el.disabled=true);
   try {
     const [a,b]=await Promise.all([...form.querySelectorAll('fieldset')].map(scenario));
     scale=Math.max(5,Math.ceil(Math.max(...[...a.profile,...b.profile].flatMap(r=>[Math.abs(r[1]),Math.abs(r[2])]))/5)*5);
