@@ -1,4 +1,92 @@
-<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Lunar Surface Planner</title><style>body{background:#101629;color:#eef0ff;font:16px system-ui;margin:0}main{max-width:850px;margin:auto;padding:24px}form,section{background:#202941;padding:20px;border-radius:14px;margin:16px 0}label{display:inline-grid;gap:6px;margin:8px}input,button{font:inherit;padding:8px}button{background:#c9bbff;border:0;border-radius:6px}.track{background:#111729;height:22px;position:relative;border-radius:5px;overflow:hidden}.bar{position:absolute;height:100%}small{color:#d4caff}.summary{background:#30294a;border:1px solid #bca4ff;border-radius:10px;padding:16px;margin:16px 0}.summary h3,.summary p{margin:6px 0}</style><main><small>LUNAR SURFACE · LIVE EPHEMERIS ESTIMATE</small><h1>Lunar Surface Planner</h1>
+<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Lunar Surface Planner</title><style>body{background:#101629;color:#eef0ff;font:16px system-ui;margin:0}main{max-width:850px;margin:auto;padding:24px}form,section{background:#202941;padding:20px;border-radius:14px;margin:16px 0}label{display:inline-grid;gap:6px;margin:8px}input,button{font:inherit;padding:8px}button{background:#c9bbff;border:0;border-radius:6px}.track{background:#111729;height:22px;position:relative;border-radius:5px;overflow:hidden}.bar{position:absolute;height:100%}small{color:#d4caff}.summary{background:#30294a;border:1px solid #bca4ff;border-radius:10px;padding:16px;margin:16px 0}.summary h3,.summary p{margin:6px 0}
+/* shared-planner-theme */
+
+:root {
+  color-scheme: dark;
+  --ink: #f2f6ff;
+  --muted: #bccbe3;
+  --mint: #9cf0dd;
+  --gold: #ffd18a;
+  --panel: #15213a;
+  --edge: #455674;
+}
+body {
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse at 80% 0%, #24355e 0, transparent 38rem),
+    radial-gradient(ellipse at 0% 45%, #142f3c 0, transparent 35rem),
+    #0b1221;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+a { color: var(--mint); text-underline-offset: .2em; }
+h1, h2, h3 { text-wrap: balance; }
+h1 { letter-spacing: -.035em; }
+p { line-height: 1.6; }
+input:not([type=range]), select {
+  color: var(--ink);
+  background: #0d172a;
+  border: 1px solid #657693;
+  border-radius: .5rem;
+  padding: .55rem .65rem;
+  min-height: 2.6rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+}
+input[type=range] {
+  width: min(100%, 38rem);
+  accent-color: var(--mint);
+  min-height: 2rem;
+}
+button, a.button {
+  border-radius: .6rem;
+  transition: transform .16s ease, box-shadow .16s ease,
+              background-color .16s ease;
+}
+button {
+  background: #233451;
+  border: 1px solid #647795;
+  color: var(--ink);
+  font-weight: 650;
+  padding: .65rem .95rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+button[type=submit], button:not([type]) {
+  background: var(--mint);
+  border-color: var(--mint);
+  color: #09231e;
+}
+button:disabled { opacity: .55; cursor: not-allowed; }
+button:not(:disabled):hover, a.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px #0005;
+}
+:where(a, button, input, select):focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 4px;
+}
+.tool-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem 1rem;
+  align-items: center;
+  margin: 0 0 1.4rem;
+  padding: .7rem 0;
+  border-bottom: 1px solid var(--edge);
+  font: 650 .9rem/1.4 system-ui, sans-serif;
+}
+.tool-nav a[aria-current=page] { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style><main><small>LUNAR SURFACE · LIVE EPHEMERIS ESTIMATE</small><nav class="tool-nav" aria-label="Planner tools"><a href="/">Home</a><a href="/lunar-surface/compare">Compare scenarios</a><a href="/lunar-surface/" aria-current="page">Single site</a><a href="/earth">Earth observation</a></nav>
+<h1>Lunar Surface Planner</h1>
 <p><a href="./compare" style="color:#a5d8ff">Compare lunar landing scenarios</a></p><p>Explore sunlight, darkness, and Earth visibility for a site on the Moon.</p><form id=f><label>Lunar latitude (°)<input name=lat type=number min=-90 max=90 step=any value=-85 required></label><label>Lunar longitude (° east)<input name=lon type=number min=-180 max=180 step=any value=0 required></label><label>Start (UTC)<input name=start type=datetime-local value=2026-11-20T00:00 required></label><label>End (UTC)<input name=end type=datetime-local value=2026-11-24T00:00 required></label><button>Show timeline</button> <button type=button id=download disabled>Export intervals (CSV)</button></form><p>Model: smooth horizon. Local terrain and radio-link reliability are not modeled. The overlap row shows when both conditions hold, not when a radio link is guaranteed.</p><section id=o aria-live=polite>Submit to calculate the timeline. First run downloads lunar orientation files.</section></main><script>
 const f=document.querySelector('#f'),o=document.querySelector('#o');
 function add(tag,t,p=o){const e=document.createElement(tag);e.textContent=t;p.append(e);return e}
