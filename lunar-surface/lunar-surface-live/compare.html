@@ -22,7 +22,7 @@ for (const [id,lon] of [['A',0],['B',180]]) {
   byId('inputs').append(field);
 }
 async function scenario(field) {
-  const query = new URLSearchParams();
+  const query = new URLSearchParams({profile:'true'});
   for(const input of field.querySelectorAll('input')) {
     query.set(input.name, input.type === 'date' ? input.value+'T00:00:00Z' : input.value);
   }
@@ -31,10 +31,27 @@ async function scenario(field) {
   const response = await fetch('./surface-windows?'+query);
   const body = await response.json();
   if(!response.ok) throw Error(typeof body.detail === 'string' ? body.detail : 'Check coordinates and dates.');
-  return {start,end,rows:body.rows.map(row=>row.map(pair=>pair.map(Date.parse)))};
+  return {start,end,profile:body.profile,rows:body.rows.map(row=>row.map(pair=>pair.map(Date.parse)))};
 }
 const hours = ms => (ms/3600000).toFixed(1)+' h';
 const utc = ms => new Date(ms).toISOString().slice(0,16).replace('T',' ')+' UTC';
+function chart(data,card) {
+  const p=data.profile, w=480, h=210, x=i=>42+i*420/(p.length-1);
+  const y=v=>12+(scale-v)*180/(2*scale);
+  const box=document.createElement('div');
+  box.innerHTML='<h3>Elevation above the smooth horizon</h3><svg viewBox="0 0 480 210" style="width:100%" role="img" aria-label="Sun and Earth elevations in degrees"></svg><p>Sun (gold) · Earth (cyan) · Dashed line: 0° horizon</p><output></output>';
+  const svg=box.querySelector('svg');
+  svg.innerHTML=[scale,0,-scale].map(v=>'<line x1="42" x2="462" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#8190a5" stroke-dasharray="4 4"/><text x="0" y="'+(y(v)+4)+'" fill="white" font-size="12">'+v+'°</text>').join('');
+  [1,2].forEach((j)=>svg.insertAdjacentHTML('beforeend','<polyline fill="none" stroke="'+(j===1?'#ffce76':'#8fe1d6')+'" stroke-width="2" points="'+p.map((r,i)=>x(i)+','+y(r[j])).join(' ')+'"/>'));
+  svg.insertAdjacentHTML('beforeend','<line class="cursor" y1="12" y2="192" stroke="white"/>');
+  cursors.push(i=>{
+    const line=svg.querySelector('.cursor');
+    line.setAttribute('x1',x(i));line.setAttribute('x2',x(i));
+    box.querySelector('output').textContent=utc(Date.parse(p[i][0]))+' · Sun '+p[i][1].toFixed(2)+'° · Earth '+p[i][2].toFixed(2)+'°';
+  });
+  card.append(box);
+}
+let scale=90, cursors=[];
 function render(data,id) {
   const card=document.createElement('section');
   card.innerHTML='<h2>Scenario '+id+'</h2><p>'+utc(data.start)+' → '+utc(data.end)+'</p><table><thead><tr><th scope="col">Condition</th><th scope="col">Total</th></tr></thead><tbody></tbody></table>';
@@ -51,14 +68,22 @@ function render(data,id) {
   });
   const best=data.rows[3].reduce((best,w)=>!best||w[1]-w[0]>best[1]-best[0]?w:best,null);
   const p=document.createElement('p');p.textContent=best?'Longest overlap: '+hours(best[1]-best[0])+' · '+utc(best[0])+' → '+utc(best[1]):'No overlap in this range.';
-  card.append(p);results.append(card);
+  card.append(p);chart(data,card);results.append(card);
 }
 form.addEventListener('submit',async event=>{
   event.preventDefault();results.replaceChildren();status.textContent='Calculating both scenarios…';
   const button=form.querySelector('button');button.disabled=true;
   try {
     const [a,b]=await Promise.all([...form.querySelectorAll('fieldset')].map(scenario));
+    scale=Math.max(5,Math.ceil(Math.max(...[...a.profile,...b.profile].flatMap(r=>[Math.abs(r[1]),Math.abs(r[2])]))/5)*5);
+    cursors=[];
     render(a,'A');render(b,'B');
+    const label=document.createElement('label');
+    label.textContent='Scrub both charts by progress through each date range';
+    const slider=document.createElement('input');
+    slider.type='range';slider.min=0;slider.max=a.profile.length-1;slider.value=0;
+    slider.oninput=()=>cursors.forEach(fn=>fn(Number(slider.value)));
+    label.append(slider);label.style.gridColumn='1 / -1';results.prepend(label);slider.oninput();
     status.textContent='Comparison complete. Bars show each scenario relative to its own selected date range.';
   } catch(error){status.textContent=error.message;} finally{button.disabled=false;}
 });
