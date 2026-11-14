@@ -12,7 +12,7 @@ def create_app():
 
     @app.get("/", include_in_schema=False)
     def home():
-        return FileResponse(ROOT / "landing.html")
+        return FileResponse(ROOT / "app" / "templates" / "home.html")
 
     @app.get("/earth", include_in_schema=False)
     def observe():
