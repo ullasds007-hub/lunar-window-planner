@@ -347,6 +347,14 @@ if(!shared.has('example') && ['a_','b_'].every(prefix=>shareNames.every(name=>sh
     field.querySelector('select').value='';
     shareNames.forEach(name=>field.querySelector('[name='+name+']').value=shared.get((i?'b_':'a_')+name));
   });
-  form.requestSubmit();
+  if(form.checkValidity()) form.requestSubmit();
+  else {
+    byId('scenario-editor').open=true;
+    status.textContent='This comparison link contains invalid inputs. Correct the highlighted fields and run the comparison again.';
+    form.reportValidity();
+  }
+} else if (!shared.has('example') && ['a_','b_'].some(prefix=>shareNames.some(name=>shared.has(prefix+name)))) {
+  byId('scenario-editor').open=true;
+  status.textContent='This comparison link is incomplete. Copy the full link or enter both scenarios below.';
 }
 </script></html>
