@@ -19,11 +19,11 @@ def create_lunar_app() -> FastAPI:
 
     @surface.get("/", include_in_schema=False)
     def home():
-        return FileResponse(PACKAGE / "templates" / "site.html")
+        return FileResponse(PACKAGE / "templates" / "site.html", headers={"Cache-Control": "no-cache"})
 
     @surface.get("/compare", include_in_schema=False)
     def compare_page():
-        return FileResponse(PACKAGE / "templates" / "compare.html")
+        return FileResponse(PACKAGE / "templates" / "compare.html", headers={"Cache-Control": "no-cache"})
 
     @surface.get("/surface-windows")
     def windows(start: datetime, end: datetime,
