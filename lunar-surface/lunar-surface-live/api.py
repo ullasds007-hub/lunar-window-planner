@@ -2,11 +2,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
-from skyfield.api import load, load_file, PlanetaryConstants
+from skyfield.api import Loader, load_file, PlanetaryConstants
 from skyfield.almanac import find_discrete
 from functools import lru_cache
 app=FastAPI()
-ROOT=Path(__file__).parent
+ROOT=Path(__file__).resolve().parent
+load = Loader(str(ROOT))
 @lru_cache(maxsize=1)
 def model():
     ts=load.timescale()

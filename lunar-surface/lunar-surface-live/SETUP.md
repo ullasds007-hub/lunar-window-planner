@@ -35,3 +35,26 @@ smooth horizon and does not model local terrain or guarantee radio contact.
 Run a calculation while connected to confirm the setup. Before relying
 on offline operation, disconnect and run a new calculation on the same
 machine with the downloaded files in place.
+
+## Run both planners on one port
+
+Set up the Earth planner's dependencies and data as usual. Then, from
+the repository root, install the lunar dependencies, prepare the lunar
+data, and start the combined server:
+
+    python -m pip install -r lunar-surface/lunar-surface-live/requirements.txt
+    python lunar-surface/lunar-surface-live/prepare_data.py
+    python -m uvicorn combined_app:app --port 8005
+
+Open http://127.0.0.1:8005/ for the Earth planner. Use the homepage link
+to open the Lunar Surface Planner at http://127.0.0.1:8005/lunar-surface/.
+Keep the trailing slash when opening the lunar page directly.
+
+With the server running, verify the mounted lunar API from a second
+terminal at the repository root:
+
+    python lunar-surface/lunar-surface-live/smoke_test.py http://127.0.0.1:8005/lunar-surface
+
+To run the Earth planner by itself, use the original `api:app` entry
+point. Use `combined_app:app` when you want the homepage's lunar link
+to work on the same server.
