@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lunar scenario comparison</title>
 <link rel="stylesheet" href="./assets/compare.css">
-<main><nav class="tool-nav" aria-label="Planner tools"><a href="/">Home</a><a href="/lunar-surface/compare" aria-current="page">Compare landing sites</a><a href="/lunar-surface/">Single site</a><a href="/earth">Observe from Earth</a></nav><h1>Compare lunar landing sites</h1>
+<link rel="stylesheet" href="/lunar-surface/assets/planner.css">
+<main><header class="planner-header"><nav class="planner-nav" aria-label="Planner tools"><a class="planner-brand" href="/">Lunar Window Planner</a><a href="/lunar-surface/compare" aria-current="page">Compare landing sites</a><a href="/lunar-surface/">Analyze one site</a><a href="/earth">Observe from Earth</a></nav></header><h1>Compare lunar landing sites</h1>
 <p>Compare two sites or try the same site on different dates. All dates start at 00:00 UTC. These estimates use a smooth horizon: they do not account for terrain shadows, power output, or radio-link reliability.</p>
 <details id="scenario-editor" open><summary>Edit sites and dates</summary><form id="form"><div class="grid" id="inputs"></div><div class="compare-actions"><button>Compare landing sites</button> <button type="button" id="copy">Copy A to B</button>
 <label>Shift B by days (negative moves earlier)<input id="shift-days" type="number" step="1" value="3"></label>
