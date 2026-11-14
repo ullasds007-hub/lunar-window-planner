@@ -5,7 +5,9 @@ body{margin:2rem auto;padding:0 1rem;max-width:65rem;background:#111827;color:#f
 </style>
 <main><a href="./">Single-site planner</a><h1>Compare lunar landing scenarios</h1>
 <p>Compare two sites or try the same site on different dates. All dates start at 00:00 UTC. These estimates use a smooth horizon: they do not account for terrain shadows, power output, or radio-link reliability.</p>
-<form id="form"><div class="grid" id="inputs"></div><button>Compare scenarios</button></form>
+<form id="form"><div class="grid" id="inputs"></div><button>Compare scenarios</button> <button type="button" id="copy">Copy A to B</button>
+<label>Shift B by days (negative moves earlier)<input id="shift-days" type="number" step="1" value="3"></label>
+<button type="button" id="shift">Shift B dates</button></form>
 <p id="status" role="status"></p><div id="results" class="grid"></div>
 <p>Model: JPL DE440s and lunar orientation kernels via Skyfield. This comparison interface was developed with ChatGPT assistance.</p></main>
 <script>
@@ -21,6 +23,26 @@ for (const [id,lon] of [['A',0],['B',180]]) {
     '<label>End date (UTC)<input required name="end" type="date" value="2026-11-24"></label>';
   byId('inputs').append(field);
 }
+const [fieldA,fieldB]=form.querySelectorAll('fieldset');
+function edited(message) {
+  results.replaceChildren();
+  status.textContent=message+' Click Compare scenarios to recalculate.';
+}
+byId('copy').onclick=()=>{
+  for(const input of fieldA.querySelectorAll('input')) fieldB.querySelector('[name='+input.name+']').value=input.value;
+  edited('Copied A into B.');
+};
+byId('shift').onclick=()=>{
+  const days=byId('shift-days').valueAsNumber;
+  const dates=[...fieldB.querySelectorAll('input[type=date]')];
+  const shifted=dates.map(input=>input.valueAsNumber+days*86400000);
+  if(!Number.isInteger(days)||shifted.some(t=>!Number.isFinite(t)||t<Date.UTC(1901,0,1)||t>=Date.UTC(2050,0,1))){
+    status.textContent='Enter a whole number of days that keeps both B dates within 1901–2049.';
+    return;
+  }
+  dates.forEach((input,i)=>input.valueAsNumber=shifted[i]);
+  edited('Shifted both B dates by '+days+' days.');
+};
 async function scenario(field) {
   const query = new URLSearchParams({profile:'true'});
   for(const input of field.querySelectorAll('input')) {
@@ -72,7 +94,7 @@ function render(data,id) {
 }
 form.addEventListener('submit',async event=>{
   event.preventDefault();results.replaceChildren();status.textContent='Calculating both scenarios…';
-  const button=form.querySelector('button');button.disabled=true;
+  const controls=[...form.querySelectorAll('button,input')]; controls.forEach(el=>el.disabled=true);
   try {
     const [a,b]=await Promise.all([...form.querySelectorAll('fieldset')].map(scenario));
     scale=Math.max(5,Math.ceil(Math.max(...[...a.profile,...b.profile].flatMap(r=>[Math.abs(r[1]),Math.abs(r[2])]))/5)*5);
@@ -84,7 +106,9 @@ form.addEventListener('submit',async event=>{
     slider.type='range';slider.min=0;slider.max=a.profile.length-1;slider.value=0;
     slider.oninput=()=>cursors.forEach(fn=>fn(Number(slider.value)));
     label.append(slider);label.style.gridColumn='1 / -1';results.prepend(label);slider.oninput();
-    status.textContent='Comparison complete. Bars show each scenario relative to its own selected date range.';
-  } catch(error){status.textContent=error.message;} finally{button.disabled=false;}
+    const total = d=>d.rows[3].reduce((sum,[s,e])=>sum+e-s,0);
+    const delta=total(b)-total(a);
+    status.textContent='Total overlap (B − A): '+(delta>=0?'+':'−')+hours(Math.abs(delta))+'. Bars show each scenario relative to its own selected date range.';
+  } catch(error){status.textContent=error.message;} finally{controls.forEach(el=>el.disabled=false);}
 });
 </script></html>
