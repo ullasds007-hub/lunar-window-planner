@@ -31,7 +31,7 @@ for (const field of form.querySelectorAll('fieldset')) {
 const [fieldA,fieldB]=form.querySelectorAll('fieldset');
 function edited(message) {
   status.classList.remove('decision');results.replaceChildren();
-  status.textContent=message+' Click Compare landing sites to recalculate.';
+  status.textContent=message+' Select Run comparison to recalculate.';
 }
 byId('copy').onclick=()=>{
   for(const input of fieldA.querySelectorAll('input')) fieldB.querySelector('[name='+input.name+']').value=input.value;
@@ -67,9 +67,9 @@ function chart(data,card) {
   const p=data.profile, w=480, h=210, x=i=>42+i*420/(p.length-1);
   const y=v=>12+(scale-v)*180/(2*scale);
   const box=document.createElement('div');
-  box.innerHTML='<h3>Elevation above the smooth horizon</h3><svg viewBox="0 0 480 210" style="width:100%" role="img" aria-label="Sun and Earth elevations in degrees"></svg><p>Sun (solid) · Earth (dashed) · 0° horizon</p><output></output>';
+  box.innerHTML='<h3>Elevation above the smooth horizon</h3><svg viewBox="0 0 480 210" style="width:100%" role="img" aria-label="Sun and Earth elevations in degrees"></svg><p>Sun (solid) · Earth (dashed) · Dashed horizontal line: 0° horizon</p><output></output>';
   const svg=box.querySelector('svg');
-  svg.innerHTML=[scale,0,-scale].map(v=>'<line x1="42" x2="462" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#8190a5" stroke-dasharray="4 4"/><text x="0" y="'+(y(v)+4)+'" fill="white" font-size="12">'+v+'°</text>').join('');
+  svg.innerHTML=[scale,0,-scale].map(v=>'<line x1="42" x2="462" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#8190a5" class="'+(v===0?'horizon':'grid-line')+'" stroke-dasharray="'+(v===0?'4 4':'none')+'"/><text x="0" y="'+(y(v)+4)+'" fill="white" font-size="12">'+v+'°</text>').join('');
   [1,2].forEach((j)=>svg.insertAdjacentHTML('beforeend','<polyline fill="none" stroke="'+(j===1?'#ffce76':'#8fe1d6')+'" stroke-width="2" points="'+p.map((r,i)=>x(i)+','+y(r[j])).join(' ')+'"/>'));
   svg.insertAdjacentHTML('beforeend','<line class="cursor" y1="12" y2="192" stroke="white"/>');
   cursors.push(i=>{
