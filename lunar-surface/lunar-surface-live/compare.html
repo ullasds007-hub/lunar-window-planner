@@ -138,12 +138,13 @@ fieldset select { display: block; margin-top: .25rem; }
 
 /* Workspace refinement — ChatGPT-assisted */
 body{background:radial-gradient(ellipse at 85% 0%,#252650,transparent 42rem),#090e1b} .tool-nav{gap:.5rem;padding:.55rem;border:1px solid #394764;border-radius:.85rem;background:#111a2e}.tool-nav a{padding:.45rem .7rem;border-radius:.45rem;text-decoration:none}.tool-nav a:hover,.tool-nav a[aria-current=page]{background:#293853} fieldset,#results>section,.hero .card{box-shadow:0 12px 34px #0004} button,a.button{letter-spacing:.015em} button:active,a.button:active{transform:translateY(1px)} .compare-actions{padding:.8rem;background:#111a2e;border-radius:.85rem} #status strong{display:inline-block;margin-right:.4rem;font-size:1.8rem} #results output{padding:.65rem;border-radius:.5rem;background:#0b1425} @media(max-width:520px){.compare-actions button{flex:1 1 auto} select{width:100%} .tool-nav a{font-size:.8rem}}
+#scenario-editor{background:#131e34;border:1px solid #455674;border-radius:1rem;padding:1rem;margin:1rem 0}#scenario-editor>summary{cursor:pointer;color:var(--mint);font-weight:750;padding:.45rem}#results{align-items:start}#results>section{padding:clamp(.85rem,2vw,1.5rem)}#results>section h2{margin-top:0}#results svg{background:#0b1425;border-radius:.65rem;padding:.55rem;box-sizing:border-box}#status strong{font-variant-numeric:tabular-nums}@media(max-width:600px){#results.grid{grid-template-columns:minmax(0,1fr)}}
 </style>
 <main><nav class="tool-nav" aria-label="Planner tools"><a href="/">Home</a><a href="/lunar-surface/compare" aria-current="page">Compare scenarios</a><a href="/lunar-surface/">Single site</a><a href="/earth">Earth observation</a></nav><h1>Compare lunar landing scenarios</h1>
 <p>Compare two sites or try the same site on different dates. All dates start at 00:00 UTC. These estimates use a smooth horizon: they do not account for terrain shadows, power output, or radio-link reliability.</p>
-<form id="form"><div class="grid" id="inputs"></div><div class="compare-actions"><button>Compare scenarios</button> <button type="button" id="copy">Copy A to B</button>
+<details id="scenario-editor" open><summary>Edit sites and dates</summary><form id="form"><div class="grid" id="inputs"></div><div class="compare-actions"><button>Compare scenarios</button> <button type="button" id="copy">Copy A to B</button>
 <label>Shift B by days (negative moves earlier)<input id="shift-days" type="number" step="1" value="3"></label>
-<button type="button" id="shift">Shift B dates</button></div></form>
+<button type="button" id="shift">Shift B dates</button></div></form></details>
 <p id="status" role="status"></p><div id="results" class="grid"></div>
 <p>Historical landing coordinates: <a href="https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html">NASA spacecraft landing table</a>. The model uses coordinates only, not landing-site terrain.</p><p>Model: JPL DE440s and lunar orientation kernels via Skyfield. This comparison interface was developed with ChatGPT assistance.</p></main>
 <script>
@@ -269,6 +270,7 @@ form.addEventListener('submit',async event=>{
     label.append(slider);label.style.gridColumn='1 / -1';results.prepend(label);slider.oninput();
     const total = d=>d.rows[3].reduce((sum,[s,e])=>sum+e-s,0);
     const delta=total(b)-total(a);
+    byId('scenario-editor').open=false;
     const metric=document.createElement('strong');
     metric.textContent=(delta>0?'+':delta<0?'−':'')+hours(Math.abs(delta));
     status.replaceChildren(metric, document.createTextNode(
