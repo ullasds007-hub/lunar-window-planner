@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lunar scenario comparison</title>
+<link rel="stylesheet" href="./assets/compare.css">
+<main><nav class="tool-nav" aria-label="Planner tools"><a href="/">Home</a><a href="/lunar-surface/compare" aria-current="page">Compare landing sites</a><a href="/lunar-surface/">Single site</a><a href="/earth">Observe from Earth</a></nav><h1>Compare lunar landing sites</h1>
+<p>Compare two sites or try the same site on different dates. All dates start at 00:00 UTC. These estimates use a smooth horizon: they do not account for terrain shadows, power output, or radio-link reliability.</p>
+<details id="scenario-editor" open><summary>Edit sites and dates</summary><form id="form"><div class="grid" id="inputs"></div><div class="compare-actions"><button>Compare landing sites</button> <button type="button" id="copy">Copy A to B</button>
+<label>Shift B by days (negative moves earlier)<input id="shift-days" type="number" step="1" value="3"></label>
+<button type="button" id="shift">Shift B dates</button></div></form></details>
+<p id="status" role="status"></p><div id="results" class="grid"></div>
+<p>Historical landing coordinates: <a href="https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html">NASA spacecraft landing table</a>. The model uses coordinates only, not landing-site terrain.</p><p>Model: JPL DE440s and lunar orientation kernels via Skyfield. This comparison interface was developed with ChatGPT assistance.</p></main>
+<script defer src="./assets/compare.js"></script></html>
