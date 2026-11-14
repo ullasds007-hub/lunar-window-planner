@@ -38,7 +38,6 @@ def calculate_windows(start: datetime, end: datetime, lat: float, lon: float, pr
     a, b = (dt.astimezone(timezone.utc) for dt in (start, end))
     if not (0 < (b-a).total_seconds() <= 60*86400 and 1901 <= a.year <= b.year <= 2049):
         raise ValueError("Choose a date range of up to 60 days within 1901–2049.")
-    try:
     ts,eph,pc,frame=model()
     from skyfield.almanac import find_discrete
     site=eph['moon']+pc.build_latlon_degrees(frame,lat,lon)
