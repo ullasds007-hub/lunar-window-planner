@@ -1,7 +1,10 @@
 skyfield>=1.49
 numpy
+scipy
+pillow
 tzdata
 fastapi
 uvicorn
 pytest
 httpx
+timezonefinder
