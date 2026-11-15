@@ -150,6 +150,71 @@ function overlapBreakdown(data) {
   ];
   return parts.filter(([, ms]) => ms > 0);
 }
+const visibilityStates = ['Neither above', 'Sun only', 'Earth only', 'Both above'];
+function visibilitySegments({start, end, rows}) {
+  const changes = new Map();
+  const toggle = (time, bit) => changes.set(time, (changes.get(time) || 0) ^ bit);
+  for (const [row, bit] of [[rows[0], 1], [rows[2], 2]]) {
+    for (const [a, b] of row) {
+      const left = Math.max(a, start), right = Math.min(b, end);
+      if (right > left) { toggle(left, bit); toggle(right, bit); }
+    }
+  }
+  const segments = [];
+  let left = start, state = 0;
+  for (const right of [...new Set([...changes.keys(), end])].sort((a, b) => a - b)) {
+    if (right > left) {
+      const previous = segments.at(-1);
+      if (previous && previous.state === state) previous.end = right;
+      else segments.push({start: left, end: right, state});
+    }
+    state ^= changes.get(right) || 0;
+    left = right;
+  }
+  return segments;
+}
+function visibilityTimeline(data) {
+  const box = document.createElement('div');
+  box.className = 'visibility-timeline';
+  const title = document.createElement('h3');
+  title.textContent = 'Visibility timeline';
+  const track = document.createElement('div');
+  track.className = 'visibility-track';
+  track.setAttribute('aria-hidden', 'true');
+  const key = document.createElement('ul');
+  key.className = 'visibility-key';
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.textContent = 'View visibility intervals (UTC)';
+  const list = document.createElement('ul');
+  const states = new Set();
+  for (const segment of visibilitySegments(data)) {
+    const {start, end, state} = segment;
+    const label = visibilityStates[state];
+    states.add(state);
+    const band = document.createElement('span');
+    band.className = 'visibility-state-' + state;
+    band.style.left = 100 * (start - data.start) / (data.end - data.start) + '%';
+    band.style.width = 100 * (end - start) / (data.end - data.start) + '%';
+    const time = utc(start) + ' → ' + utc(end);
+    band.title = label + ': ' + time;
+    track.append(band);
+    const item = document.createElement('li');
+    item.textContent = label + ': ' + time + ' · ' + hours(end - start);
+    list.append(item);
+  }
+  for (const state of [...states].sort((a, b) => b - a)) {
+    const item = document.createElement('li');
+    const swatch = document.createElement('span');
+    swatch.className = 'visibility-state-' + state;
+    swatch.setAttribute('aria-hidden', 'true');
+    item.append(swatch, visibilityStates[state]);
+    key.append(item);
+  }
+  details.append(summary, list);
+  box.append(title, track, key, details);
+  return box;
+}
 function render(data,id) {
   const card=document.createElement('section');
   card.innerHTML='<h2>Scenario '+id+'</h2><p>'+utc(data.start)+' → '+utc(data.end)+'</p><table><thead><tr><th scope="col">Condition</th><th scope="col">Total</th></tr></thead><tbody></tbody></table>';
@@ -178,6 +243,7 @@ function render(data,id) {
     ? 'Time outside overlap: ' + parts.map(([label, ms]) => label + ' (' + hours(ms) + ')').join(' · ')
     : 'The Sun and Earth stay above the modeled horizon for the whole window.';
   card.append(breakdown);
+  card.append(visibilityTimeline(data));
   chart(data,card);
   const details=document.createElement('details');
   const summary=document.createElement('summary');
