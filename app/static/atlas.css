@@ -45,3 +45,15 @@ input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}.compare
 input[type=date],input[type=datetime-local]{min-inline-size:0}
 .compare-actions{overflow-wrap:anywhere}
 @media(max-width:400px){.form-grid,#f,#inputs fieldset{grid-template-columns:minmax(0,1fr)}}
+
+/* Comparison visibility bands: colors plus a text legend and UTC intervals. */
+.visibility-timeline { margin-block: 1rem; }
+.visibility-timeline .visibility-track { position: relative; height: 1rem; overflow: hidden; border-radius: .4rem; border: 1px solid #81988e; }
+.visibility-timeline .visibility-track > span { position: absolute; inset-block: 0; }
+.visibility-timeline .visibility-key { display: flex; flex-wrap: wrap; gap: .35rem 1rem; list-style: none; margin: .45rem 0; padding: 0; font-size: .875rem; }
+.visibility-timeline .visibility-key li { display: inline-flex; align-items: center; gap: .35rem; }
+.visibility-timeline .visibility-key span { width: .8rem; height: .8rem; border: 1px solid #526760; border-radius: .16rem; }
+.visibility-timeline .visibility-state-0 { background: repeating-linear-gradient(135deg, #d8dcd7 0 4px, #b0b9b2 4px 6px); }
+.visibility-timeline .visibility-state-1 { background: #aa5314; }
+.visibility-timeline .visibility-state-2 { background: #23648a; }
+.visibility-timeline .visibility-state-3 { background: #146655; }
