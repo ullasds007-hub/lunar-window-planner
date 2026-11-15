@@ -1,0 +1,110 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #080e1c;
+    color: #ffffff;
+    min-height: 100vh;
+}
+
+.header {
+    background: linear-gradient(135deg, #111d38, #202e50);
+    padding: 35px 20px;
+    text-align: center;
+    border-bottom: 1px solid #34476b;
+}
+
+.header h1 {
+    font-size: 30px;
+    color: #e7edff;
+    margin-bottom: 10px;
+}
+
+.header p {
+    color: #aab9d8;
+    font-size: 15px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 35px 20px;
+}
+
+.intro {
+    margin-bottom: 30px;
+}
+
+.intro h2 {
+    font-size: 25px;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.intro p {
+    color: #aab9d8;
+    line-height: 1.6;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.chart-card {
+    background: #111c31;
+    border: 1px solid #263956;
+    border-radius: 14px;
+    padding: 24px;
+    min-width: 0;
+    min-height: 320px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.chart-card:hover {
+    transform: translateY(-4px);
+    border-color: #718bd1;
+}
+
+.chart-card h3 {
+    color: #e5ebff;
+    font-size: 17px;
+    margin-bottom: 22px;
+}
+
+.chart-card canvas {
+    width: 100% !important;
+    max-height: 240px;
+}
+
+.notice {
+    text-align: center;
+    color: #8fa4c8;
+    font-size: 13px;
+    margin-top: 30px;
+    padding: 15px;
+}
+
+@media (max-width: 700px) {
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header h1 {
+        font-size: 23px;
+    }
+
+    .container {
+        padding: 22px 14px;
+    }
+
+    .chart-card {
+        padding: 18px;
+    }
+}

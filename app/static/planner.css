@@ -1,0 +1,9 @@
+/* Common planner navigation and interaction states. */
+.planner-header{padding:.75rem 0;margin:0 0 1.5rem;border:0}
+.planner-nav{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem;padding:.45rem;border:1px solid #455674;border-radius:.85rem;background:#111a2e}
+.planner-nav a{padding:.55rem .75rem;min-height:2.75rem;display:inline-flex;align-items:center;border-radius:.5rem;color:#c6d6ed;text-decoration:none;font:650 .875rem/1.3 system-ui,sans-serif;box-sizing:border-box}
+.planner-nav .planner-brand{margin-right:auto;font-weight:800;color:#f2f6ff}
+.planner-nav a:hover,.planner-nav a[aria-current=page]{background:#293853;color:#fff}
+:where(.planner-nav a, .button, button, input, select, summary):focus-visible{outline:3px solid #ffd18a;outline-offset:3px}
+@media(max-width:38rem){.planner-nav .planner-brand{flex-basis:100%}.planner-nav a{padding-inline:.55rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compare landing sites · Lunar Window Planner</title><link rel="stylesheet" href="/lunar-surface/assets/atlas.css?v=lunar-atlas-fixed"><script defer src="/lunar-surface/assets/compare.js?v=landing-delay-1"></script></head>
+<body><div class="wrap"><header class="planner-header"><div class="planner-top"><a class="planner-brand" href="/">◐ &nbsp; LUNAR WINDOW PLANNER</a></div><nav class="planner-nav" aria-label="Planner tools"><a href="/">Home</a><a href="/lunar-surface/compare" aria-current="page">Compare landing sites</a><a href="/lunar-surface/">Analyze one site</a><a href="/earth">Observe from Earth</a></nav></header><main><p class="eyebrow">Lunar surface / Comparison / UTC</p><h1>Compare landing sites</h1><p class="lede">Compare two locations or time windows. All dates and times are UTC.</p><details id="scenario-editor" open><summary>Edit sites and times</summary><form id="form"><div class="grid" id="inputs"></div><div class="compare-actions"><button type="submit">Run comparison →</button> <button type="button" id="copy">Copy A to B</button>
+<label>Shift B by days<input id="shift-days" type="number" step="1" value="3"></label>
+<button type="button" id="shift">Apply shift</button></div>
+<details id="delay-editor">
+<summary>Compare a landing delay</summary>
+<p>Uses Scenario A’s site and start time. Both windows have the same duration; Scenario B starts later.</p>
+<div class="compare-actions">
+<label>Window duration (hours)<input id="delay-duration" type="number" step="any" value="6"></label>
+<label>Landing delay (hours)<input id="delay-hours" type="number" step="any" value="72"></label>
+<button type="button" id="apply-delay">Run landing delay comparison</button>
+<button type="button" id="shackleton-example">Try the Shackleton Rim example</button>
+</div>
+</details></form></details><div id="status" role="status"></div><div id="results" class="grid"></div><aside class="model"><p class="eyebrow">Model &amp; sources</p><p>JPL DE440s via Skyfield. A smooth lunar horizon does not account for terrain shadows, power output, or radio-link reliability.</p><p><a href="https://trek.nasa.gov/moon/">NASA Moon Trek</a> · <a href="https://ssd.jpl.nasa.gov/horizons/">JPL Horizons</a> · <a href="https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html">NASA landing coordinates</a></p></aside></main></div></body></html>

@@ -1,0 +1,74 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lunar Window Planner | Analytics</title>
+
+    <link rel="stylesheet" href="charts.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <h1>&#x1F319; Lunar Window Planner</h1>
+        <p>Mission Analytics Dashboard</p>
+    </header>
+
+    <main class="container">
+
+        <section class="intro">
+            <h2>Lunar Mission Analytics</h2>
+            <p>
+                Explore lunar launch opportunities through
+                interactive charts and mission data.
+            </p>
+        </section>
+
+        <section class="chart-grid">
+
+            <div class="chart-card">
+                <h3>Launch Window Suitability</h3>
+                <canvas id="suitabilityChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>Earth-Moon Distance</h3>
+                <canvas id="distanceChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>Mission Duration</h3>
+                <canvas id="durationChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>Energy Comparison</h3>
+                <canvas id="energyChart"></canvas>
+            </div>
+
+        </section>
+
+        <p class="notice" id="data-status">
+            Illustrative demo data only.
+            Not actual lunar predictions.
+        </p>
+
+    </main>
+
+    <!-- Local Chart.js library -->
+    <script src="chart.umd.min.js"></script>
+
+    <!-- Main chart module -->
+    <script src="charts.js"></script>
+
+    <!-- Dynamic integration module -->
+    <script src="integration.js"></script>
+
+</body>
+</html>
+
+
