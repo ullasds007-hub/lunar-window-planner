@@ -13,12 +13,27 @@ for (const [id,lon] of [['A',0],['B',180]]) {
 }
 const sites = {
   im1: [-80.13, 1.44],
-  im2: [-84.7906, 29.1957]
+  im2: [-84.7906, 29.1957],
+  site04: [-89.7668, -171.87], // 188.13° E
+  site11: [-88.6834, -67.9321] // 292.0679° E
 };
+const candidateNames = {
+  site04: 'Site 04 · Shackleton Rim',
+  site11: 'Site 11 · de Gerlache Rim 1'
+};
+function presetFor(lat, lon) {
+  if (lat.trim() === '' || lon.trim() === '') return '';
+  return Object.keys(sites).find(key => sites[key][0] === Number(lat) && sites[key][1] === Number(lon)) || '';
+}
+function syncPreset(field) {
+  field.querySelector('select').value = presetFor(field.querySelector('[name=lat]').value, field.querySelector('[name=lon]').value);
+}
 for (const field of form.querySelectorAll('fieldset')) {
   const label = document.createElement('label');
-  label.innerHTML = 'Site preset <select><option value="">Custom coordinates</option><option value="im1">Odysseus (IM-1) — historical landing site</option><option value="im2">Athena (IM-2) — historical landing site</option></select>';
+  label.innerHTML = 'Site preset <select><option value="">Custom coordinates</option><option value="im1">Odysseus (IM-1) — historical landing site</option><option value="im2">Athena (IM-2) — historical landing site</option><optgroup label="South-pole candidates"></optgroup></select>';
   const select = label.querySelector('select');
+  const candidates = select.querySelector('optgroup');
+  for (const [key, name] of Object.entries(candidateNames)) candidates.append(new Option(name, key));
   const lat = field.querySelector('[name=lat]');
   const lon = field.querySelector('[name=lon]');
   field.querySelector('legend').after(label);
@@ -70,9 +85,8 @@ function applyDelay() {
 }
 byId('apply-delay').onclick=applyDelay;
 byId('shackleton-example').onclick=()=>{
-  fieldA.querySelector('select').value='';
-  fieldA.querySelector('[name=lat]').value='-89.7668';
-  fieldA.querySelector('[name=lon]').value='-171.87'; // 188.13° E in signed longitude.
+  fieldA.querySelector('select').value='site04';
+  [fieldA.querySelector('[name=lat]').value, fieldA.querySelector('[name=lon]').value] = sites.site04;
   fieldA.querySelector('[name=start]').value='2026-12-14T20:00';
   byId('delay-duration').value='6';
   byId('delay-hours').value='72';
@@ -143,7 +157,8 @@ function render(data,id) {
   const p=document.createElement('p');p.textContent=best?'Longest overlap: '+hours(best[1]-best[0])+' · '+utc(best[0])+' → '+utc(best[1]):'No overlap in this range.';
   const coordinates=document.createElement('p');
   const [lat,lon]=snapshot()[id==='A'?0:1];
-  coordinates.textContent='Latitude '+lat+'° · Longitude '+lon+'° (east-positive)';
+  const candidate = candidateNames[presetFor(lat,lon)];
+  coordinates.textContent=(candidate ? candidate+' · ' : '')+'Latitude '+lat+'° · Longitude '+lon+'° (east-positive)';
   card.insertBefore(coordinates,card.querySelector('table'));
   card.append(p);
   chart(data,card);
@@ -249,8 +264,8 @@ try {
 const shared=new URLSearchParams(location.search);
 if(!shared.has('example') && ['a_','b_'].every(prefix=>shareNames.every(name=>shared.has(prefix+name)))){
   fieldsForShare.forEach((field,i)=>{
-    field.querySelector('select').value='';
     shareNames.forEach(name=>restore(field.querySelector('[name='+name+']'), shared.get((i?'b_':'a_')+name)));
+    syncPreset(field);
   });
   if(form.checkValidity()) form.requestSubmit();
   else {
