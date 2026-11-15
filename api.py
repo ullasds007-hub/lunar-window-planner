@@ -107,11 +107,23 @@ def website():
     return FileResponse(Path(__file__).with_name('index.html'))
 
 @app.get('/windows')
-def windows(locationId: str, startDate: date, endDate: date, goal: str):
+def windows(locationId: str, startDate: date, endDate: date, goal: str,
+            lat: float | None = None, lon: float | None = None, tz: str | None = None, name: str | None = None):
+    """Moon-viewing / dark-sky windows. locationId 'mysuru' (preset) or 'custom' with lat, lon and tz."""
     def error(code, message):
         return {'status':'error','error':{'code':code,'message':message}}
-    if locationId != 'mysuru':
-        return error('UNKNOWN_LOCATION','Choose Mysuru.')
+    if locationId == 'mysuru':
+        site_lat, site_lon, zone_name = 12.2958, 76.6394, 'Asia/Kolkata'
+    elif locationId == 'custom':
+        if lat is None or lon is None or not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+            return error('INVALID_LOCATION', 'Choose a place: latitude -90..90 and longitude -180..180 are required.')
+        try:
+            ZoneInfo(tz or 'UTC')
+        except Exception:
+            return error('INVALID_TIMEZONE', f'Unknown time zone {tz!r}.')
+        site_lat, site_lon, zone_name = lat, lon, tz or 'UTC'
+    else:
+        return error('UNKNOWN_LOCATION','Choose Mysuru or search for a place.')
     if goal not in ('moon_viewing','dark_sky'):
         return error('INVALID_GOAL','Choose Moon viewing or Dark sky.')
     days = (endDate-startDate).days+1
@@ -119,10 +131,10 @@ def windows(locationId: str, startDate: date, endDate: date, goal: str):
         return error('INVALID_DATE_RANGE','Last night cannot be before the first.')
     if days > 31:
         return error('RANGE_TOO_LONG','Choose up to 31 nights.')
-    zone = ZoneInfo('Asia/Kolkata')
+    zone = ZoneInfo(zone_name)
     try:
         ts, eph = mo._sky()
-        observer = mo.Observer(12.2958,76.6394,0,'Asia/Kolkata').vector()
+        observer = mo.Observer(site_lat,site_lon,0,zone_name).vector()
         def qualifies(t):
             at = observer.at(t)
             moon = at.observe(eph['moon']).apparent().altaz()[0].degrees

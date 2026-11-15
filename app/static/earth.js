@@ -5,15 +5,23 @@
     const button = form.querySelector('button');
 
     const minutes = w => (Date.parse(w.end) - Date.parse(w.start)) / 60000;
-    const fmt = new Intl.DateTimeFormat('en-IN', {
-      timeZone: 'Asia/Kolkata',
+    const place = () => (window.lwpPlace ? window.lwpPlace() : { name: 'Mysuru', tz: 'Asia/Kolkata' });
+    const fmtFor = tz => new Intl.DateTimeFormat('en-IN', {
+      timeZone: tz,
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
     });
-    const range = w => `${fmt.format(new Date(w.start))}–${fmt.format(new Date(w.end))} IST`;
+    const zoneLabel = tz => {
+      try { return new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value; }
+      catch { return tz; }
+    };
+    const range = w => {
+      const tz = place().tz, fmt = fmtFor(tz);
+      return `${fmt.format(new Date(w.start))}–${fmt.format(new Date(w.end))} ${tz === 'Asia/Kolkata' ? 'IST' : zoneLabel(tz)}`;
+    };
 
     async function findWindows(input) {
       const response = await fetch('/windows?' + new URLSearchParams(input));
@@ -46,6 +54,8 @@
         bar.setAttribute('aria-label', label);
       }
     }
+
+    form.addEventListener('lwp:place', () => { out.textContent = `Location set to ${place().name}. Select Find windows.`; });
 
     form.addEventListener('submit', async event => {
       event.preventDefault();
@@ -82,7 +92,7 @@
         out.textContent = '';
 
         const goalLabel = input.goal === 'dark_sky' ? 'Dark sky' : 'Moon viewing';
-        add('p', `Mysuru · ${goalLabel} · ${input.startDate} to ${input.endDate}`);
+        add('p', `${place().name} · ${goalLabel} · ${input.startDate} to ${input.endDate}`);
 
         if (!windows.length) {
           add('h2', 'No windows found');
