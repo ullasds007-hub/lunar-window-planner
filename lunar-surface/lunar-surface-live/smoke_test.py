@@ -30,8 +30,13 @@ def require(condition, message):
 
 def main():
     status, page = request("/")
-    require(status == 200 and b"Lunar Surface Planner" in page,
-            f"Expected Lunar Surface Planner at {BASE}; got HTTP {status}.")
+    require(
+        status == 200 and (
+            b"Lunar Surface Planner" in page
+            or b"<h1>Analyze one site</h1>" in page
+        ),
+        f"Expected the lunar surface page at {BASE}; got HTTP {status}.",
+    )
     print("PASS: lunar-surface page loads")
 
     results = []
