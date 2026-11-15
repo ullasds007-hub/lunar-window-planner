@@ -1,0 +1,20 @@
+body {
+  margin: 0;
+  padding: 24px;
+  background: #101629;
+  color: #eef0ff;
+  font: 16px/1.6 system-ui, sans-serif;
+}
+
+main {
+  max-width: 680px;
+  margin: 32px auto;
+  padding: clamp(16px, 4vw, 32px);
+  background: #202941;
+  border: 1px solid #414a68;
+  border-radius: 16px;
+}
+
+a {
+  color: #c9bbff;
+}

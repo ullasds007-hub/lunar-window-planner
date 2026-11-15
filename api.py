@@ -6,6 +6,7 @@ Docs: http://127.0.0.1:8000/docs
 from datetime import date, datetime, timezone
 from typing import Literal
 from zoneinfo import ZoneInfo
+from fastapi.staticfiles import StaticFiles
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 
@@ -151,3 +152,8 @@ def windows(locationId: str, startDate: date, endDate: date, goal: str):
         import logging
         logging.exception('Window calculation failed')
         return error('CALCULATION_FAILED','Could not calculate windows. Check the server log and retry.')
+app.mount(
+    "/user-guide",
+    StaticFiles(directory=Path(__file__).resolve().parent / "user-guide", html=True),
+    name="user-guide",
+)

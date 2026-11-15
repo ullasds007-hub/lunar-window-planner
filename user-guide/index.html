@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User Guide | Lunar Window Planner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Lunar Window Planner User Guide</h1>
+    <p>Use the planner to find suitable times for Moon viewing or stargazing.</p>
+
+    <h2>How to run the planner</h2>
+    <p>Open a terminal in the folder containing <code>api.py</code> and run:</p>
+    <pre><code>python -m uvicorn api:app --port 8002</code></pre>
+    <p>Keep the terminal open and visit
+      <a href="http://127.0.0.1:8002/">http://127.0.0.1:8002/</a>
+      in your browser instead of double-clicking <code>index.html</code>.
+    </p>
+
+    <h2>Quick tutorial</h2>
+    <ol>
+      <li>Under <strong>Location</strong>, select <strong>Mysuru</strong> for this demo.</li>
+      <li>Set <strong>First observing night</strong> to 20 November 2026
+        and <strong>Last observing night</strong> to 22 November 2026.</li>
+      <li>Under <strong>Observation goal</strong>, choose <strong>Moon viewing</strong>.</li>
+      <li>Click <strong>Find Windows</strong> and review the results below the form.</li>
+    </ol>
+    <p>Each observing night runs from local noon to noon the next day.
+      The planner does not check weather.</p>
+
+    <p>A suggested window does not guarantee clear skies. Check your local
+      weather and look for a spot with an unobstructed view.</p>
+
+    <p><a href="/">Back to the planner</a></p>
+  </main>
+</body>
+</html>
