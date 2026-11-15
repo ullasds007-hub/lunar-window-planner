@@ -139,6 +139,17 @@ function chart(data,card) {
   card.append(box);
 }
 let scale=90, cursors=[];
+function overlapBreakdown(data) {
+  const total = index => data.rows[index].reduce((sum, [start, end]) => sum + end - start, 0);
+  const windowMs = data.end - data.start;
+  const sunlight = total(0), earthVisible = total(2), overlap = total(3);
+  const parts = [
+    ['Earth below or at the horizon, Sun above', sunlight - overlap],
+    ['Sun below or at the horizon, Earth above', earthVisible - overlap],
+    ['Neither above the horizon', windowMs - sunlight - earthVisible + overlap],
+  ];
+  return parts.filter(([, ms]) => ms > 0);
+}
 function render(data,id) {
   const card=document.createElement('section');
   card.innerHTML='<h2>Scenario '+id+'</h2><p>'+utc(data.start)+' → '+utc(data.end)+'</p><table><thead><tr><th scope="col">Condition</th><th scope="col">Total</th></tr></thead><tbody></tbody></table>';
@@ -161,6 +172,12 @@ function render(data,id) {
   coordinates.textContent=(candidate ? candidate+' · ' : '')+'Latitude '+lat+'° · Longitude '+lon+'° (east-positive)';
   card.insertBefore(coordinates,card.querySelector('table'));
   card.append(p);
+  const breakdown = document.createElement('p');
+  const parts = overlapBreakdown(data);
+  breakdown.textContent = parts.length
+    ? 'Time outside overlap: ' + parts.map(([label, ms]) => label + ' (' + hours(ms) + ')').join(' · ')
+    : 'The Sun and Earth stay above the modeled horizon for the whole window.';
+  card.append(breakdown);
   chart(data,card);
   const details=document.createElement('details');
   const summary=document.createElement('summary');
