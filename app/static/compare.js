@@ -7,8 +7,8 @@ for (const [id,lon] of [['A',0],['B',180]]) {
   field.innerHTML = '<legend>Scenario '+id+'</legend>'+
     '<label>Latitude (°)<input required name="lat" type="number" min="-90" max="90" step="any" value="-85"></label>'+
     '<label>Longitude (° east)<input required name="lon" type="number" min="-180" max="180" step="any" value="'+lon+'"></label>'+
-    '<label>Start date (UTC)<input required name="start" type="date" value="2026-11-20"></label>'+
-    '<label>End date (UTC)<input required name="end" type="date" value="2026-11-24"></label>';
+    '<label>Start date and time (UTC)<input required name="start" type="datetime-local" step="60" value="2026-11-20T00:00"></label>'+
+    '<label>End date and time (UTC)<input required name="end" type="datetime-local" step="60" value="2026-11-24T00:00"></label>';
   byId('inputs').append(field);
 }
 const sites = {
@@ -38,30 +38,75 @@ byId('copy').onclick=()=>{
   fieldB.querySelector('select').value=fieldA.querySelector('select').value;
   edited('Copied A into B.');
 };
+// datetime-local is a wall-clock field; here its values are explicitly UTC.
+const DAY = 86400000, MINUTE = 60000;
+const utcField = ms => new Date(ms).toISOString().slice(0,16);
+const insideModel = ms => ms >= Date.UTC(1901,0,1) && ms < Date.UTC(2050,0,1);
+const timeField = el => el.name === 'start' || el.name === 'end';
+function restore(el, value) {
+  if (timeField(el) && /^\d{4}-\d{2}-\d{2}$/.test(value)) value += 'T00:00';
+  el.value = value;
+}
+function applyDelay() {
+  const start = fieldA.querySelector('[name=start]').valueAsNumber;
+  const duration = byId('delay-duration').valueAsNumber * 60;
+  const delay = byId('delay-hours').valueAsNumber * 60;
+  const times = [start, start + duration*MINUTE, start + delay*MINUTE, start + (duration+delay)*MINUTE];
+  if (!Number.isInteger(duration) || duration < 1 || duration > 60*1440 ||
+      !Number.isInteger(delay) || delay < 0 || !times.every(insideModel)) {
+    status.classList.remove('decision');
+    status.textContent='Choose a valid UTC start, a 1-minute to 60-day duration, and a nonnegative delay. Both windows must be within 1901–2049.';
+    results.replaceChildren();
+    return;
+  }
+  for (const name of ['lat','lon']) fieldB.querySelector('[name='+name+']').value=fieldA.querySelector('[name='+name+']').value;
+  fieldB.querySelector('select').value=fieldA.querySelector('select').value;
+  for (const [i, field] of [fieldA,fieldB].entries()) {
+    field.querySelector('[name=start]').value=utcField(times[2*i]);
+    field.querySelector('[name=end]').value=utcField(times[2*i+1]);
+  }
+  edited('Scenario A is the planned window; Scenario B is the delayed window.');
+  form.requestSubmit();
+}
+byId('apply-delay').onclick=applyDelay;
+byId('shackleton-example').onclick=()=>{
+  fieldA.querySelector('select').value='';
+  fieldA.querySelector('[name=lat]').value='-89.7668';
+  fieldA.querySelector('[name=lon]').value='-171.87'; // 188.13° E in signed longitude.
+  fieldA.querySelector('[name=start]').value='2026-12-14T20:00';
+  byId('delay-duration').value='6';
+  byId('delay-hours').value='72';
+  applyDelay();
+};
 byId('shift').onclick=()=>{
   const days=byId('shift-days').valueAsNumber;
-  const dates=[...fieldB.querySelectorAll('input[type=date]')];
+  const dates=[...fieldB.querySelectorAll('input[type=datetime-local]')];
   const shifted=dates.map(input=>input.valueAsNumber+days*86400000);
   if(!Number.isInteger(days)||shifted.some(t=>!Number.isFinite(t)||t<Date.UTC(1901,0,1)||t>=Date.UTC(2050,0,1))){
     status.textContent='Enter a whole number of days that keeps both B dates within 1901–2049.';
     return;
   }
-  dates.forEach((input,i)=>input.valueAsNumber=shifted[i]);
+  dates.forEach((input,i)=>input.value=utcField(shifted[i]));
   edited('Shifted both B dates by '+days+' days.');
 };
 async function scenario(field) {
   const query = new URLSearchParams({profile:'true'});
   for(const input of field.querySelectorAll('input')) {
-    query.set(input.name, input.type === 'date' ? input.value+'T00:00:00Z' : input.value);
+    query.set(input.name, timeField(input) ? input.value+'Z' : input.value);
   }
   const start = Date.parse(query.get('start')), end = Date.parse(query.get('end'));
-  if(end <= start || end-start > 60*86400000) throw Error('Each end date must be after its start date, within 60 days.');
+  if(!insideModel(start) || !insideModel(end) || end <= start || end-start > 60*DAY) throw Error('Each end must follow its start, within 60 days and within 1901–2049 UTC.');
   const response = await fetch('./surface-windows?'+query);
   const body = await response.json();
   if(!response.ok) throw Error(typeof body.detail === 'string' ? body.detail : 'Check coordinates and dates.');
   return {start,end,profile:body.profile,rows:body.rows.map(row=>row.map(pair=>pair.map(Date.parse)))};
 }
-const hours = ms => (ms/3600000).toFixed(1)+' h';
+let shortWindows = false;
+const hours = ms => {
+  if (!shortWindows) return (ms/3600000).toFixed(1)+' h';
+  const minutes = Math.round(ms/MINUTE);
+  return `${Math.floor(minutes/60)} h ${String(minutes%60).padStart(2,'0')} min`;
+};
 const utc = ms => new Date(ms).toISOString().slice(0,16).replace('T',' ')+' UTC';
 function chart(data,card) {
   const p=data.profile, w=480, h=210, x=i=>42+i*420/(p.length-1);
@@ -152,6 +197,7 @@ form.addEventListener('submit',async event=>{
     const [a,b]=await Promise.all([...form.querySelectorAll('fieldset')].map(scenario));
     scale=Math.max(5,Math.ceil(Math.max(...[...a.profile,...b.profile].flatMap(r=>[Math.abs(r[1]),Math.abs(r[2])]))/5)*5);
     cursors=[];
+    shortWindows = Math.max(a.end-a.start,b.end-b.start) <= DAY;
     render(a,'A');render(b,'B');
     const label=document.createElement('label');
     label.textContent='Move through both timelines · same relative progress';
@@ -182,8 +228,8 @@ if (new URLSearchParams(location.search).get('example') === 'athena') {
     field.querySelector('select').value = 'im2';
     field.querySelector('[name=lat]').value = '-84.7906';
     field.querySelector('[name=lon]').value = '29.1957';
-    field.querySelector('[name=start]').value = dates[i][0];
-    field.querySelector('[name=end]').value = dates[i][1];
+    restore(field.querySelector('[name=start]'), dates[i][0]);
+    restore(field.querySelector('[name=end]'), dates[i][1]);
   });
   form.requestSubmit();
 }
@@ -194,7 +240,7 @@ try {
   const inputs=[...form.querySelectorAll('fieldset input,fieldset select')];
   const saved=JSON.parse(localStorage.getItem(key)||'null');
   if(!new URLSearchParams(location.search).has('example') && Array.isArray(saved) && saved.length===inputs.length)
-    inputs.forEach((el,i)=>{if(typeof saved[i]==='string')el.value=saved[i];});
+    inputs.forEach((el,i)=>{if(typeof saved[i]==='string')restore(el,saved[i]);});
   const save=()=>{try{localStorage.setItem(key,JSON.stringify(inputs.map(el=>el.value)));}catch{}};
   form.addEventListener('change',save);
   form.addEventListener('submit',save);
@@ -204,7 +250,7 @@ const shared=new URLSearchParams(location.search);
 if(!shared.has('example') && ['a_','b_'].every(prefix=>shareNames.every(name=>shared.has(prefix+name)))){
   fieldsForShare.forEach((field,i)=>{
     field.querySelector('select').value='';
-    shareNames.forEach(name=>field.querySelector('[name='+name+']').value=shared.get((i?'b_':'a_')+name));
+    shareNames.forEach(name=>restore(field.querySelector('[name='+name+']'), shared.get((i?'b_':'a_')+name)));
   });
   if(form.checkValidity()) form.requestSubmit();
   else {

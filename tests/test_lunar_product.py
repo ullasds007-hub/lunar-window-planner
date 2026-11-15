@@ -82,3 +82,35 @@ def test_combined_comparison_route_and_assets():
         "endDate": "2026-11-14", "goal": "moon_viewing",
     })
     assert earth.json()["error"]["code"] == "UNKNOWN_LOCATION"
+
+
+def test_shackleton_landing_delay():
+    if not all(path.is_file() for path in lunar.DATA_FILES):
+        message = "Run python prepare_combined.py for the Shackleton regression"
+        if os.getenv("LUNAR_REQUIRE_DATA") == "1":
+            pytest.fail(message)
+        pytest.skip(message)
+
+    client = TestClient(create_lunar_app())
+    planned = datetime(2026, 12, 14, 20, tzinfo=timezone.utc)
+    totals = []
+    for start in (planned, planned + timedelta(days=3)):
+        end = start + timedelta(hours=6)
+        response = client.get("/surface-windows", params={
+            "lat": -89.7668,
+            "lon": -171.87,
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        })
+        assert response.status_code == 200, response.text
+        overlap = response.json()["rows"][3]
+        intervals = [(datetime.fromisoformat(a), datetime.fromisoformat(b))
+                     for a, b in overlap]
+        assert intervals
+        assert all(start <= a < b <= end for a, b in intervals)
+        totals.append(sum((b - a).total_seconds() for a, b in intervals) / 60)
+
+    # Allow a minute for the difference in horizon-crossing methods.
+    assert totals[0] == pytest.approx(214, abs=1)
+    assert totals[1] == pytest.approx(360, abs=0.01)
+    assert totals[1] - totals[0] == pytest.approx(146, abs=1)
