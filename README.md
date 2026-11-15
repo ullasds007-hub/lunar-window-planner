@@ -7,14 +7,14 @@ Lunar Window Planner brings two astronomy tools together on one local website. U
 Install Python 3.12 if you don’t already have it. From the repository root, run:
 
 ```bash
-python -m pip install -r requirements.txt -r lunar-surface/lunar-surface-live/requirements.txt tzdata
+python -m pip install -r requirements.txt
 python prepare_combined.py
-python -m uvicorn combined_app:app --port 8005
+python -m uvicorn app.main:app --port 8012
 ```
 
 The first setup needs internet access to install dependencies and download the astronomy data. You don’t need to copy a `data/` folder from another checkout. Keep the downloaded astronomy files out of Git.
 
-Keep the server terminal open and visit [http://127.0.0.1:8005/](http://127.0.0.1:8005/) for the Earth planner. Click **Open the Lunar Surface Planner**, or go directly to [http://127.0.0.1:8005/lunar-surface/](http://127.0.0.1:8005/lunar-surface/). Keep the trailing slash on the lunar address. Press **Ctrl+C** in the server terminal to stop it.
+Keep the server terminal open and visit `http://127.0.0.1:8012/` for Home. Use `/earth` for Observe from Earth or `/lunar-surface/` to Analyze one site. Press **Ctrl+C** in the server terminal to stop it.
 
 ## Try both planners
 
@@ -27,7 +27,7 @@ Keep the server terminal open and visit [http://127.0.0.1:8005/](http://127.0.0.
 With the combined server running, open a second terminal at the repository root and run:
 
 ```bash
-python lunar-surface/lunar-surface-live/smoke_test.py http://127.0.0.1:8005/lunar-surface
+python lunar-surface/lunar-surface-live/smoke_test.py http://127.0.0.1:8012/lunar-surface
 ```
 
 The smoke test checks that the page loads, the API responds for both lunar sites, reversed dates are rejected, and valid requests still work afterward. It does not independently validate the exact timing of astronomical events.

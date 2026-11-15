@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Observe from Earth · Lunar Window Planner</title><link rel="stylesheet" href="/lunar-surface/assets/atlas.css?v=lunar-atlas-fixed"><script defer src="/lunar-surface/assets/earth.js"></script></head>
+<body><div class="wrap"><header class="planner-header"><div class="planner-top"><a class="planner-brand" href="/">◐ &nbsp; LUNAR WINDOW PLANNER</a></div><nav class="planner-nav" aria-label="Planner tools"><a href="/">Home</a><a href="/lunar-surface/compare">Compare landing sites</a><a href="/lunar-surface/">Analyze one site</a><a href="/earth" aria-current="page">Observe from Earth</a></nav></header><main><p class="eyebrow">Earth observation / Mysuru / IST</p><h1>Observe from Earth</h1><p class="lede">Find Moon-viewing or dark-sky windows. Times are local to Mysuru; weather is not included.</p><form id="planner" class="panel">
+      <div class="form-grid">
+        <label>
+          Location
+          <select name="locationId">
+            <option value="mysuru">Mysuru</option>
+          </select>
+        </label>
+        <label>
+          First observing night
+          <input required type="date" name="startDate" value="2026-11-20">
+        </label>
+        <label>
+          Last observing night
+          <input required type="date" name="endDate" value="2026-11-22" aria-describedby="error">
+        </label>
+        <label>
+          Observation goal
+          <select name="goal" aria-describedby="goal-help">
+            <option value="moon_viewing">Moon viewing</option>
+            <option value="dark_sky">Dark sky</option>
+          </select>
+        </label>
+      </div>
+
+      <p id="goal-help" class="sr-only">
+        <strong>Moon viewing:</strong> The Moon is at least 10° above the horizon and the Sun is at least 6° below it.
+        <br>
+        <strong>Dark sky:</strong> The Moon is below the horizon and the Sun is at least 18° below it.
+      </p>
+
+      <p id="error" role="alert" hidden></p>
+      <button type="submit">Find windows →</button>
+    </form><section id="output" aria-live="polite">Choose your dates and select Find windows.</section><aside class="model"><p class="eyebrow">What qualifies?</p><p>Moon viewing: Moon at least 10° above the horizon and Sun at least 6° below it. Dark sky: Moon below the horizon and Sun at least 18° below it. An observing night runs from local noon to the next noon.</p></aside></main></div></body></html>
