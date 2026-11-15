@@ -67,3 +67,16 @@ Moon fallback are all generated procedurally in `simulation3d/web/js/scene/commo
 ## Bundled NASA Moon color map
 
 NASA Scientific Visualization Studio / Ernie Wright, *CGI Moon Kit* (SVS ID 4720), 2025 color map derived from LRO/LROC data. The 2K JPEG is included unmodified. See [source and full credits](https://svs.gsfc.nasa.gov/4720/) and [SVS reuse policy](https://svs.gsfc.nasa.gov/help/). It is used for appearance only, not for ground elevations or visibility calculations. The separate local QuickMap exports remain excluded.
+
+## Bundled south-pole elevation tiles (NASA LRO / LOLA)
+
+`simulation3d/web/terrain/lola-v1/` contains two local, resampled crops from NASA GSFC's
+[South Pole Landing Site LOLA DEMs](https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/),
+not QuickMap exports. Source files and checksums are listed in `sources.json` there.
+Cite Barker et al. (2021), *Improved LOLA Elevation Maps for South Pole Landing Sites:
+Error Estimates and Their Impact on Illumination Conditions*, Planetary & Space
+Science 203, 105119, [doi:10.1016/j.pss.2020.105119](https://doi.org/10.1016/j.pss.2020.105119).
+See [NASA science data usage guidance](https://science.data.nasa.gov/about/license).
+The tiles sample an 8 km square at 100 m spacing, in local east/north coordinates.
+The surface color, fine texture, lighting, and terrain beyond the tile are illustrative.
+The planner's Sun/Earth window calculations still use a smooth horizon.

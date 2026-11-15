@@ -3,6 +3,29 @@ import { createStage, makeStars, makeEarth, makeGlow, regolithNormalMap, assetCr
 import { azElToDir, rng, DEG } from '../util.js';
 import { api } from '../api.js';
 
+const LOLA_SITES = { site04: [-89.7668, 188.13], site11: [-88.6834, 292.0679] };
+const LOLA_CREDIT = 'Terrain: NASA LRO / LOLA · Barker et al. (2021) · illustrative surface shading; calculations use a smooth horizon';
+
+async function measuredTerrain(site) {
+  const s = typeof site === 'string' ? { site } : site;
+  const id = s?.site === 'custom'
+    ? Object.keys(LOLA_SITES).find(k => Math.abs(s.lunar_lat - LOLA_SITES[k][0]) < 0.00001 &&
+      Math.abs(((Number(s.lunar_lon) % 360) + 360) % 360 - LOLA_SITES[k][1]) < 0.00001)
+    : s?.site;
+  if (!Object.hasOwn(LOLA_SITES, id)) return null;
+  const response = await fetch(`/sim/app/terrain/lola-v1/${id}.bin`);
+  if (!response.ok) return null;
+  const data = await response.arrayBuffer(), rows = 81;
+  if (data.byteLength !== rows * rows * 4) return null;
+  const view = new DataView(data);
+  const heights = Float32Array.from({ length: rows * rows }, (_, i) => view.getFloat32(i * 4, true));
+  if (!heights.every(Number.isFinite)) return null;
+  const [lat, lon] = LOLA_SITES[id];
+  const albedo = new THREE.DataTexture(new Uint8Array([174, 174, 174, 255]), 1, 1);
+  albedo.needsUpdate = true;
+  return [{ rows, size_m: 8000, site_height_m: heights[(heights.length - 1) / 2], lat, lon, measured: true }, heights, albedo];
+}
+
 const R_MOON = 1737400;          // m
 const SKY_R = 120000;            // m: distance at which Sun/Earth are drawn (beyond the terrain)
 const EYE_HEIGHT = 8;            // m above local ground
@@ -69,9 +92,12 @@ export function createTerrainView(container, { siteId, headingDeg = 0, onReady, 
 
   // ---- build terrain from data -----------------------------------------------------------------
   const credit = assetCredit(container);
-  const ready = Promise.all([api.terrainMeta(siteId), api.terrainHeights(siteId),
-    new Promise((res, rej) => new THREE.TextureLoader().load(api.terrainAlbedoUrl(siteId), res, undefined, rej))])
-    .then((d) => { credit.lroc(); return d; }, () => {
+  const ready = measuredTerrain(siteId).catch(() => null).then((tile) => {
+    if (tile) { credit.node.textContent = LOLA_CREDIT; return tile; }
+    return Promise.all([api.terrainMeta(siteId), api.terrainHeights(siteId),
+      new Promise((res, rej) => new THREE.TextureLoader().load(api.terrainAlbedoUrl(siteId), res, undefined, rej))])
+      .then((d) => { credit.lroc(); return d; });
+  }).catch(() => {
       // LROC files not installed: flat illustrative ground (consistent with the planners' smooth-horizon model)
       credit.simplified(SIMPLIFIED_GROUND);
       const s = typeof siteId === 'object' ? siteId : {};
@@ -99,7 +125,7 @@ export function createTerrainView(container, { siteId, headingDeg = 0, onReady, 
         let micro = 0;
         for (const w of waves) micro += w.a * Math.sin((w.kx * x + w.kz * z) * w.f + w.p);
         const d2 = x * x + z * z;
-        pos.setY(i, meta.simplified ? 0 : h - base + micro * 0.06 - d2 / (2 * R_MOON));    // lunar curvature drop; micro-relief kept faint
+        pos.setY(i, meta.simplified ? 0 : h - base + (meta.measured ? 0 : micro * 0.06) - d2 / (2 * R_MOON));    // lunar curvature drop; micro-relief kept faint
       }
       geo.computeVertexNormals();
       albedo.colorSpace = THREE.SRGBColorSpace;
