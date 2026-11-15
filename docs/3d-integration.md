@@ -1,0 +1,9 @@
+# 3D viewer review
+
+Open Home, Compare landing sites, Analyze one site, or Observe from Earth and select **3D simulation**. The viewer is opt-in so the existing tools can run without WebGL. Compare uses two panels and a linked relative-time control, not necessarily the same UTC time. Compare and Analyze use the current form values. Earth view uses the selected place and nights. The existing results and smooth-horizon calculations are authoritative.
+
+- Test the same-time south-pole comparison and the 72-hour delay, then confirm the normal result cards, visibility timelines, CSV, and share link still work. Also test a preset on Analyze, Home globe controls, and Mysuru plus a searched city in Observe from Earth.
+- Fresh checkouts use labeled procedural Moon and flat ground. Local detailed terrain is only shown if the corresponding assets are installed. Terrain is illustrative, not used for power, shadow, or radio feasibility. Missing detailed terrain does not change calculation results.
+- The viewer needs WebGL and its pinned Three.js CDN files. The map and city search use OpenStreetMap tiles and Photon. No key is required. City search sends search terms to Photon; do not type private addresses. The separate Use my location button requests browser location only when clicked and sends the selected coordinates to the planner for its calculations.
+- Visual asset provenance: LROC QuickMap/WMS WAC normalized reflectance and GLD100-derived relief, as described in the contributor archive. Near-pole heights are coarse; textures and relief are visualized with adjustments. See [CREDITS.md](../CREDITS.md). Do not commit the downloaded QuickMap exports.
+- No alternate Horizons or LROC generation API, weather or scoring API, or Google credential configuration was included. No changes to deployment commands or README are needed for local review.

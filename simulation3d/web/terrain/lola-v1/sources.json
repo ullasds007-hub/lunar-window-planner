@@ -1,0 +1,30 @@
+{
+  "site04": {
+    "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_surf.tif",
+    "source_sha256": "38ff70dbdf2f066c2cfa94a646c3a59d653ce7f6b4528b15fc1b43ee397ce758",
+    "tile_sha256": "19c4da5898866a7628c8fbe0119f9b5fde46f629afcacb665231aa5e57048405",
+    "lat": -89.7668,
+    "lon_east": 188.13,
+    "rows": 81,
+    "columns": 81,
+    "spacing_m": 100,
+    "order": "north to south, west to east",
+    "encoding": "little endian float32 metres",
+    "min_m": -1820.156982421875,
+    "max_m": 1736.75341796875
+  },
+  "site11": {
+    "source": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site11/Site11_final_adj_5mpp_surf.tif",
+    "source_sha256": "58f3372c35bbd6baf38ffd5633c1c96b59bd89dbd252150581d12893a43136e5",
+    "tile_sha256": "a77d4910d08949163bcc064a59fe06cb7c231c4dc4db731f565a95b8e44dc66d",
+    "lat": -88.6834,
+    "lon_east": 292.0679,
+    "rows": 81,
+    "columns": 81,
+    "spacing_m": 100,
+    "order": "north to south, west to east",
+    "encoding": "little endian float32 metres",
+    "min_m": 195.4137725830078,
+    "max_m": 1813.4473876953125
+  }
+}

@@ -38,3 +38,6 @@ service-account*.json
 /*.zip
 .DS_Store
 Thumbs.db
+
+# Local LROC QuickMap exports: do not redistribute
+/simulation3d/data/web_assets/

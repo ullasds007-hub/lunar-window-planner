@@ -2,21 +2,18 @@
 const byId = id => document.getElementById(id);
 const form = byId('form'), status = byId('status'), results = byId('results');
 const labels = ['Sunlight','Darkness','Earth visible','Sunlight + Earth visible'];
-for (const [id,lon] of [['A',0],['B',180]]) {
+const sites = window.LWP_SITES.byId;
+const demoStart = '2026-12-14T20:00', demoEnd = '2026-12-15T02:00';
+for (const [id, site] of [['A','site04'],['B','site11']]) {
+  const [lat, lon] = sites[site];
   const field = document.createElement('fieldset');
   field.innerHTML = '<legend>Scenario '+id+'</legend>'+
-    '<label>Latitude (°)<input required name="lat" type="number" min="-90" max="90" step="any" value="-85"></label>'+
+    '<label>Latitude (°)<input required name="lat" type="number" min="-90" max="90" step="any" value="'+lat+'"></label>'+
     '<label>Longitude (° east)<input required name="lon" type="number" min="-180" max="180" step="any" value="'+lon+'"></label>'+
-    '<label>Start date and time (UTC)<input required name="start" type="datetime-local" step="60" value="2026-11-20T00:00"></label>'+
-    '<label>End date and time (UTC)<input required name="end" type="datetime-local" step="60" value="2026-11-24T00:00"></label>';
+    '<label>Start date and time (UTC)<input required name="start" type="datetime-local" step="60" value="'+demoStart+'"></label>'+
+    '<label>End date and time (UTC)<input required name="end" type="datetime-local" step="60" value="'+demoEnd+'"></label>';
   byId('inputs').append(field);
 }
-const sites = {
-  im1: [-80.13, 1.44],
-  im2: [-84.7906, 29.1957],
-  site04: [-89.7668, -171.87], // 188.13° E
-  site11: [-88.6834, -67.9321] // 292.0679° E
-};
 const candidateNames = {
   site04: 'Site 04 · Shackleton Rim',
   site11: 'Site 11 · de Gerlache Rim 1'
@@ -30,13 +27,12 @@ function syncPreset(field) {
 }
 for (const field of form.querySelectorAll('fieldset')) {
   const label = document.createElement('label');
-  label.innerHTML = 'Site preset <select><option value="">Custom coordinates</option><option value="im1">Odysseus (IM-1) — historical landing site</option><option value="im2">Athena (IM-2) — historical landing site</option><optgroup label="South-pole candidates"></optgroup></select>';
+  label.innerHTML = 'Site preset <select>' + window.LWP_SITES.optionsHtml() + '</select>';
   const select = label.querySelector('select');
-  const candidates = select.querySelector('optgroup');
-  for (const [key, name] of Object.entries(candidateNames)) candidates.append(new Option(name, key));
   const lat = field.querySelector('[name=lat]');
   const lon = field.querySelector('[name=lon]');
   field.querySelector('legend').after(label);
+  syncPreset(field);
   select.onchange = () => {
     if (select.value) [lat.value, lon.value] = sites[select.value];
     edited('Site selection updated.');
@@ -337,8 +333,10 @@ try {
   const key='lunar-comparison-v1';
   const inputs=[...form.querySelectorAll('fieldset input,fieldset select')];
   const saved=JSON.parse(localStorage.getItem(key)||'null');
-  if(!new URLSearchParams(location.search).has('example') && Array.isArray(saved) && saved.length===inputs.length)
+  if(!new URLSearchParams(location.search).has('example') && Array.isArray(saved) && saved.length===inputs.length) {
     inputs.forEach((el,i)=>{if(typeof saved[i]==='string')restore(el,saved[i]);});
+    [fieldA, fieldB].forEach(syncPreset);
+  }
   const save=()=>{try{localStorage.setItem(key,JSON.stringify(inputs.map(el=>el.value)));}catch{}};
   form.addEventListener('change',save);
   form.addEventListener('submit',save);

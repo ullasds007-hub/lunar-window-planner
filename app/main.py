@@ -19,6 +19,9 @@ def create_app():
         return FileResponse(ROOT / "app" / "templates" / "earth.html", headers={"Cache-Control": "no-cache"})
 
     app.mount("/lunar-surface", create_lunar_app())
+    from simulation3d.sim_api.main import app as simulation
+
+    app.mount("/sim", simulation)
     app.mount("/", earth)
     return app
 

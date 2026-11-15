@@ -1,14 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Observe from Earth · Lunar Window Planner</title><link rel="stylesheet" href="/lunar-surface/assets/atlas.css?v=lunar-atlas-fixed"><script defer src="/lunar-surface/assets/earth.js"></script></head>
+<title>Observe from Earth · Lunar Window Planner</title><link rel="stylesheet" href="/lunar-surface/assets/atlas.css?v=lunar-atlas-fixed"><script defer src="/lunar-surface/assets/earth-location.js?v=observe-sync-1"></script><script defer src="/lunar-surface/assets/earth.js?v=observe-sync-1"></script><script defer src="/lunar-surface/assets/sim-launch.js?v=3d-review-1"></script></head>
 <body><div class="wrap"><header class="planner-header"><div class="planner-top"><a class="planner-brand" href="/">◐ &nbsp; LUNAR WINDOW PLANNER</a></div><nav class="planner-nav" aria-label="Planner tools"><a href="/">Home</a><a href="/lunar-surface/compare">Compare landing sites</a><a href="/lunar-surface/">Analyze one site</a><a href="/earth" aria-current="page">Observe from Earth</a></nav></header><main><p class="eyebrow">Earth observation / Mysuru / IST</p><h1>Observe from Earth</h1><p class="lede">Find Moon-viewing or dark-sky windows. Times are local to Mysuru; weather is not included.</p><form id="planner" class="panel">
       <div class="form-grid">
-        <label>
-          Location
-          <select name="locationId">
-            <option value="mysuru">Mysuru</option>
-          </select>
-        </label>
+        <input type="hidden" name="locationId" value="mysuru">
         <label>
           First observing night
           <input required type="date" name="startDate" value="2026-11-20">
