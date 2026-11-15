@@ -82,9 +82,17 @@
   window.lwpPlace = () => current;
   const deviceBtn = wrap.querySelector('#loc-device');
   let placeVersion = 0;
+  let pendingVersion = null;
+  form.addEventListener('submit', (event) => {
+    if (pendingVersion === null || pendingVersion !== placeVersion) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    status.textContent = 'Still setting the location. Select Find windows when the place is ready.';
+  }, true);
 
   async function pick(r, source, version = ++placeVersion) {
     if (version !== placeVersion) return;
+    pendingVersion = version;
     clearTimeout(timer);
     ++seq; // ignore any city search still in flight
     results = [];
@@ -103,6 +111,7 @@
       }
     } catch { /* keep UTC and explain the fallback */ }
     if (version !== placeVersion) return;
+    pendingVersion = null;
     applyPlace({ name: r.name, lat: r.lat, lon: r.lon, tz, source });
     const coords = source === 'device' ? '' : ` · ${r.lat.toFixed(4)}°, ${r.lon.toFixed(4)}°`;
     status.textContent = `${r.name}${r.detail ? ' · ' + r.detail : ''}${coords} · ${usedFallback ? 'Time zone unavailable; using UTC' : tz}. Select Find windows.`;
@@ -114,6 +123,7 @@
       return;
     }
     const version = ++placeVersion;
+    pendingVersion = version;
     clearTimeout(timer);
     ++seq;
     results = [];
@@ -123,6 +133,7 @@
     const fail = (err) => {
       deviceBtn.disabled = false;
       if (version !== placeVersion) return;
+      pendingVersion = null;
       const reason = err.code === 1 ? 'Location permission was denied.' :
         err.code === 3 ? 'The location request timed out.' : 'Your device could not determine its location.';
       status.textContent = reason + ' Your current selection is unchanged. You can search or use the map instead.';

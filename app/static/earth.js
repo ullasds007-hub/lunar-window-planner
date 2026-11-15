@@ -2,7 +2,7 @@
     const form = document.querySelector('#planner');
     const out = document.querySelector('#output');
     const error = document.querySelector('#error');
-    const button = form.querySelector('button');
+    const button = form.querySelector('button[type=submit]');
 
     const minutes = w => (Date.parse(w.end) - Date.parse(w.start)) / 60000;
     const place = () => (window.lwpPlace ? window.lwpPlace() : { name: 'Mysuru', tz: 'Asia/Kolkata' });
@@ -18,8 +18,8 @@
       try { return new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value; }
       catch { return tz; }
     };
-    const range = w => {
-      const tz = place().tz, fmt = fmtFor(tz);
+    const range = (w, tz) => {
+      const fmt = fmtFor(tz);
       return `${fmt.format(new Date(w.start))}–${fmt.format(new Date(w.end))} ${tz === 'Asia/Kolkata' ? 'IST' : zoneLabel(tz)}`;
     };
 
@@ -55,10 +55,18 @@
       }
     }
 
-    form.addEventListener('lwp:place', () => { out.textContent = `Location set to ${place().name}. Select Find windows.`; });
+    let searchVersion = 0;
+    form.addEventListener('lwp:place', () => {
+      ++searchVersion;
+      button.disabled = false;
+      error.hidden = true;
+      out.textContent = `Location set to ${place().name}. Select Find windows.`;
+    });
 
     form.addEventListener('submit', async event => {
       event.preventDefault();
+      const version = ++searchVersion;
+      const selected = place();
       const input = Object.fromEntries(new FormData(form));
       const endDateField = form.elements.endDate;
 
@@ -84,6 +92,7 @@
 
       try {
         const response = await findWindows(input);
+        if (version !== searchVersion) return;
         if (response.status !== 'ok') {
           throw new Error(response.error?.message || 'Search failed.');
         }
@@ -92,7 +101,7 @@
         out.textContent = '';
 
         const goalLabel = input.goal === 'dark_sky' ? 'Dark sky' : 'Moon viewing';
-        add('p', `${place().name} · ${goalLabel} · ${input.startDate} to ${input.endDate}`);
+        add('p', `${selected.name} · ${goalLabel} · ${input.startDate} to ${input.endDate}`);
 
         if (!windows.length) {
           add('h2', 'No windows found');
@@ -104,20 +113,21 @@
         const summary = add('div', '');
         summary.className = 'best-window';
         add('h2', `Longest window: ${Math.round(minutes(best))} min`, summary);
-        add('p', range(best), summary);
+        add('p', range(best, selected.tz), summary);
 
         add('h3', 'All qualifying windows');
         const list = add('ul', '');
         for (const w of windows) {
           const marker = w.id === bestWindowId ? ' (best)' : '';
-          add('li', `${w.date} · ${range(w)} · ${Math.round(minutes(w))} min${marker}`, list);
+          add('li', `${w.date} · ${range(w, selected.tz)} · ${Math.round(minutes(w))} min${marker}`, list);
         }
 
         renderChart(out, windows, bestWindowId);
       } catch (err) {
+        if (version !== searchVersion) return;
         out.textContent = `${err.message} Select Find Windows to retry.`;
       } finally {
-        button.disabled = false;
+        if (version === searchVersion) button.disabled = false;
       }
     });
   
