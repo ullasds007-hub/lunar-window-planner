@@ -91,6 +91,7 @@ export function assetCredit(container) {
   container.append(node);
   return {
     node,
+    nasa() { node.textContent = 'Moon surface imagery: NASA Scientific Visualization Studio / Ernie Wright (LRO/LROC)'; node.classList.remove('simplified'); },
     lroc() { node.textContent = LROC_CREDIT; node.classList.remove('simplified'); },
     simplified(text) { node.textContent = text; node.classList.add('simplified'); },
   };

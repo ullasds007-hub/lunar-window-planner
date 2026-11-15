@@ -63,3 +63,7 @@ recorded here.
 
 The Earth seen from the Moon, the regolith ground detail, the star field, the Sun glow and the simplified
 Moon fallback are all generated procedurally in `simulation3d/web/js/scene/common.js`.
+
+## Bundled NASA Moon color map
+
+NASA Scientific Visualization Studio / Ernie Wright, *CGI Moon Kit* (SVS ID 4720), 2025 color map derived from LRO/LROC data. The 2K JPEG is included unmodified. See [source and full credits](https://svs.gsfc.nasa.gov/4720/) and [SVS reuse policy](https://svs.gsfc.nasa.gov/help/). It is used for appearance only, not for ground elevations or visibility calculations. The separate local QuickMap exports remain excluded.

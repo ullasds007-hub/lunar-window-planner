@@ -21,7 +21,9 @@ function moonTextures() {
     const l = new THREE.TextureLoader();
     const ld = (u) => new Promise((res, rej) => l.load(u, res, undefined, rej));
     moonTex = Promise.all([ld(u('/assets/moon/albedo.jpg')), ld(u('/assets/moon/normal.png'))])
-      .then(([map, normalMap]) => [map, normalMap, true], () => [simplifiedMoonTexture(), null, false]);
+      .then(([map, normalMap]) => [map, normalMap, 'lroc'])
+      .catch(() => ld(u('/app/images/nasa-moon-2k.jpg')).then(map => [map, null, 'nasa']))
+      .catch(() => [simplifiedMoonTexture(), null, 'simplified']);
   }
   return moonTex;
 }
@@ -102,8 +104,10 @@ export function createSkyView(container, { latDeg = 0 } = {}) {
   scene.add(amb);
 
   const credit = assetCredit(container);
-  moonTextures().then(([map, normalMap, isLroc]) => {
-    if (isLroc) credit.lroc(); else credit.simplified(SIMPLIFIED_MOON);
+  moonTextures().then(([map, normalMap, source]) => {
+    if (source === 'lroc') credit.lroc();
+    else if (source === 'nasa') credit.nasa();
+    else credit.simplified(SIMPLIFIED_MOON);
     map.colorSpace = THREE.SRGBColorSpace;
     Object.assign(moon.material, { map, normalMap, normalScale: new THREE.Vector2(0.6, 0.6) });
     moon.material.needsUpdate = true;

@@ -53,7 +53,8 @@ function loadMoonTextures(renderer) {
   }, undefined, rej));
   sharedTextures = Promise.all([
     load(u('/assets/moon/albedo.jpg'), true), load(u('/assets/moon/normal.png'), false), load(u('/assets/moon/height.png'), false),
-  ]).then(([map, normalMap, displacementMap]) => ({ map, normalMap, displacementMap }));
+  ]).then(([map, normalMap, displacementMap]) => ({ map, normalMap, displacementMap }))
+    .catch(() => load(u('/app/images/nasa-moon-2k.jpg'), true).then(map => ({ map, nasa: true })));
   sharedTextures.catch(() => { sharedTextures = null; });
   return sharedTextures;
 }
@@ -324,6 +325,13 @@ export function createMoonGlobe(container, opts = {}) {
   let assetMode = 'loading';
   const wholeSphere = () => { moon.material.onBeforeCompile = () => { /* no polar cut: no caps */ }; moon.material.needsUpdate = true; };
   const ready = loadMoonTextures(renderer).then((t) => {
+    if (t.nasa) {
+      assetMode = 'nasa';
+      moon.material.map = t.map;
+      wholeSphere();
+      credit.nasa();
+      return null;
+    }
     Object.assign(moon.material, {
       map: t.map, normalMap: t.normalMap, normalScale: new THREE.Vector2(1, 1),
       displacementMap: t.displacementMap, displacementScale: DISPLACEMENT, displacementBias: -DISPLACEMENT * 0.45,
